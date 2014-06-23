@@ -1,0 +1,29 @@
+CACHE MANIFEST
+# Build timeMon Jun 23 12:08:30 EEST 2014
+
+CACHE:
+../../../VAADIN/themes/base/fonts/fontawesome-webfont.ttf
+../../../VAADIN/themes/touchkit/styles.css
+../../../VAADIN/vaadinBootstrap.js
+2A86A5664F5F6290413B0E48C3C93DEA.cache.js
+clear.cache.gif
+com.example.imagestriptest.widgetset.ImagestriptestWidgetset.devmode.js
+com.example.imagestriptest.widgetset.ImagestriptestWidgetset.nocache.js
+deferredjs/2A86A5664F5F6290413B0E48C3C93DEA/1.cache.js
+deferredjs/2A86A5664F5F6290413B0E48C3C93DEA/2.cache.js
+deferredjs/2A86A5664F5F6290413B0E48C3C93DEA/3.cache.js
+deferredjs/2A86A5664F5F6290413B0E48C3C93DEA/4.cache.js
+deferredjs/2A86A5664F5F6290413B0E48C3C93DEA/5.cache.js
+deferredjs/2A86A5664F5F6290413B0E48C3C93DEA/6.cache.js
+deferredjs/2A86A5664F5F6290413B0E48C3C93DEA/7.cache.js
+deferredjs/2A86A5664F5F6290413B0E48C3C93DEA/8.cache.js
+deferredjs/2A86A5664F5F6290413B0E48C3C93DEA/9.cache.js
+imagestrip-widget/img/arrow_down.png
+imagestrip-widget/img/arrow_left.png
+imagestrip-widget/img/arrow_right.png
+imagestrip-widget/img/arrow_up.png
+imagestrip-widget/styles.css
+
+NETWORK:
+*
+

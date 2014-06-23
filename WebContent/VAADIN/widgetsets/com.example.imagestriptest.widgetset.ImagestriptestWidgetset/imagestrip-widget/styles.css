@@ -1,0 +1,103 @@
+.v-imagestrip * {
+	margin: 0;
+	padding: 0;
+}
+
+.v-imagestrip {
+	position: relative;
+	
+	margin: 0;
+	padding: 0;
+}
+
+.v-imagestrip .v-strip {
+	position: absolute;
+	overflow: hidden;
+}
+
+.v-imagestrip .strip-horizontal-scroller {	
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	
+	top: 50%;
+	margin-top: -8px;
+	
+	display: inline;
+	
+	cursor: pointer;
+	
+	border: none;
+}
+
+.v-imagestrip .strip-vertical-scroller {	
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	
+	left: 50%;
+	margin-left: -8px;
+	
+	display: inline;
+	
+	cursor: pointer;
+	
+	border: none;
+}
+
+.v-imagestrip .image-border {
+	position: absolute;
+	
+	display: inline;
+	
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	
+	background-color: #cdcdcd;
+	
+	overflow: hidden;
+}
+
+.v-imagestrip .image-border-selected {
+	background-color: #ababab;
+}
+
+.v-imagestrip .image-border img {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+}
+
+.v-imagestrip .horizontal {
+	margin-left: 10px;
+}
+
+.v-imagestrip .vertical {
+	margin-top: 10px;
+}
+
+.v-imagestrip .selectable .image-border,
+.v-imagestrip .selectable .image-border img {
+	cursor: pointer;
+}
+
+.v-imagestrip .left {
+	left: 0px;
+	background: url('img/arrow_left.png') no-repeat transparent;
+}
+
+.v-imagestrip .right {
+	right: 0px;
+	background: url('img/arrow_right.png') no-repeat transparent;
+}
+
+.v-imagestrip .up {
+	top: 0px;
+	background: url('img/arrow_up.png') no-repeat transparent;
+}
+
+.v-imagestrip .down {
+	bottom: 0px;
+	background: url('img/arrow_down.png') no-repeat transparent;
+}
