@@ -1,4 +1,4 @@
-package com.example.imagestriptest;
+package fi.leonidasoy.imagestrip;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +26,7 @@ import com.vaadin.ui.Window;
 
 public class MetadataViewer extends Panel{
 			
-	//AbsoluteLayout layout = new AbsoluteLayout();
+	AbsoluteLayout absLayout = new AbsoluteLayout();
 	VerticalLayout layout = new VerticalLayout();
 	private File file;
 
