@@ -1,1 +1,0 @@
-$wnd.fi_leonidasoy_imagestrip_widgetset_ImagestriptestWidgetset.runAsyncCallback2('xdb(984,1,BCd);_.nc=function fnc(){mac((!hac&&(hac=new nac),hac),this.b.e)};Xwd(Vh)(2);\n//# sourceURL=fi.leonidasoy.imagestrip.widgetset.ImagestriptestWidgetset-2.js\n')
