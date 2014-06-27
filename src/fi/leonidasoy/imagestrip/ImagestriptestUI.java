@@ -19,12 +19,14 @@ import com.vaadin.event.MouseEvents.ClickListener;
 import com.vaadin.server.FileResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbsoluteLayout;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.Image;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -110,6 +112,7 @@ public class ImagestriptestUI extends UI {
 	
 	private ArrayList<org.vaadin.peter.imagestrip.ImageStrip.Image> bigStripImageList = new ArrayList<org.vaadin.peter.imagestrip.ImageStrip.Image>();
 	private GridLayout gridLayout;
+	private Label imgMetaDataLabel;
 	
 	@Override
 	protected void init(VaadinRequest request) {
@@ -175,7 +178,7 @@ public class ImagestriptestUI extends UI {
 		
         gridLayout.addComponent(image, 0, 0);
         gridLayout.addComponent(absLayout, 1, 0);
-		gridLayout.addComponent(this.initMetaDataButton(), 2, 0);
+		//gridLayout.addComponent(this.initMetaDataButton(), 2, 0);
 		gridLayout.addComponent(sc,0, 1);
 		gridLayout.addComponent(scrollLeft,2, 1);
 		gridLayout.addComponent(smallStrip.getComponent(), 1, 1);
@@ -188,6 +191,10 @@ public class ImagestriptestUI extends UI {
 		imgLayout.addComponent(component);
 		imgLayout.setComponentAlignment(component, Alignment.MIDDLE_CENTER);
 		panel.setContent(imgLayout);
+		imgMetaDataLabel = new Label(this.getImgMetaDataLabelText());
+		imgMetaDataLabel.setContentMode(ContentMode.HTML);
+		absLayout.addComponent(imgMetaDataLabel, "left: 0px; right: 0px; "+
+                "bottom: 0px;");
 		
 		initSmallStripListener();
 		initBigStripListener();
@@ -197,9 +204,6 @@ public class ImagestriptestUI extends UI {
 	private void initBigStripListener() {
 		bigStrip.setListener(new Property.ValueChangeListener() {
             public void valueChange(ValueChangeEvent event) {
-		        		Property property = event.getProperty();
-		        		ImageStrip.Image value = (ImageStrip.Image) property.getValue();
-		        		int imageIndex=(value.getImageIndex());
 		        		int index = bigStrip.getIndex();
 		        		changeToFullScreenImage(index);
 		            }
@@ -213,7 +217,6 @@ public class ImagestriptestUI extends UI {
 		        		ImageStrip.Image value = (ImageStrip.Image) property.getValue();
 		        		int clickedindex = value.getImageIndex();
 		        		int moveToLeft = smallStrip.offsetComparedToMiddle(clickedindex);
-		        		//smallStrip.getIndex()
 		        		if (moveToLeft>0){
 		        			scrollToRight(Math.abs(moveToLeft));
 		        		}else if (moveToLeft<0){
@@ -229,7 +232,7 @@ public class ImagestriptestUI extends UI {
 		if(metadataVisible){
 			metadatawindow.update(new File(MyUtil.getFilename(urls[bigStrip.getIndex()])));
 		}
-
+		this.imgMetaDataLabel.setValue(getImgMetaDataLabelText());
 	}
 
 	protected void scrollToLeft(int i) {
@@ -238,9 +241,13 @@ public class ImagestriptestUI extends UI {
 		if(metadataVisible){
 			metadatawindow.update(new File(MyUtil.getFilename(urls[bigStrip.getIndex()])));
 		}
-
+		this.imgMetaDataLabel.setValue(getImgMetaDataLabelText());
 	}
 	
+	private String getImgMetaDataLabelText() {
+		return "<center>"+MetadataViewer.getImageLabelText(new File(MyUtil.getFilename(urls[bigStrip.getIndex()]))) + "</center>";
+	}
+
 	protected void changeToFullScreenImage(int index) {		
 		System.out.println(urls);
 		System.out.println(index);

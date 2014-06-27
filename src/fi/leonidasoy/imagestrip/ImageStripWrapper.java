@@ -102,7 +102,9 @@ public class ImageStripWrapper {
 		strip.removeValueChangeListener(listener);			
 		int value = (this.offset+urls.length/2)%urls.length;
 		strip.setValue(images.get(value));
-		strip.addValueChangeListener(listener);			
+		if (listener!=null){
+			strip.addValueChangeListener(listener);						
+		}
 	}
 
 	public void setListener(ValueChangeListener listener) {
