@@ -2,19 +2,27 @@ package fi.leonidasoy.imagestrip;
 
 import javax.servlet.annotation.WebServlet;
 
-import java.io.File;
-import java.util.ArrayList;
-import org.vaadin.cssinject.CSSInject;
-import org.vaadin.peter.imagestrip.ImageStrip;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.VaadinServletConfiguration;
+
+import java.io.File;
+import java.util.ArrayList;
+
+import org.imgscalr.Scalr.Rotation;
+import org.vaadin.cssinject.CSSInject;
+import org.vaadin.peter.imagestrip.ImageStrip;
+
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.event.MouseEvents.ClickEvent;
+import com.vaadin.event.MouseEvents.ClickListener;
+import com.vaadin.server.FileResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.ui.AbsoluteLayout;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.Image;
 import com.vaadin.ui.Panel;
@@ -25,15 +33,21 @@ import com.vaadin.ui.VerticalLayout;
 @SuppressWarnings("serial")
 @Theme("mobiletheme")
 //@Theme("imagestriptest")
-public class ImagestriptestUI extends UI implements ValueChangeListener {
+public class ImagestriptestUI extends UI {
 
 	@WebServlet(value = "/*", asyncSupported = true)
 	@VaadinServletConfiguration(productionMode = false, ui = ImagestriptestUI.class, widgetset = "fi.leonidasoy.imagestrip.widgetset.ImagestriptestWidgetset")
 	public static class Servlet extends VaadinServlet {
 	}
 
-	private static String[] urls = MyUtil.getUrlsFromDropbox();
-
+/*	@PreserveOnRefresh
+	@SuppressWarnings("serial")
+	@Theme("mobiletheme")
+	@Widgetset("com.arvue.apps.imagestriptest.gwt.AppWidgetSet")
+	//@Widgetset("com.vaadin.addon.touchkit.gwt.TouchKitWidgetSet")
+	public class App extends UI{
+*/
+	
 	/*
 	imagestrip
 	<dependency>
@@ -73,81 +87,188 @@ public class ImagestriptestUI extends UI implements ValueChangeListener {
 	<dependency org="com.dropbox.core" name="dropbox-core-sdk" rev="1.7.6"/>	
 	*/
 
+	private static final String leonidasLogo = "https://db.tt/bnvnVqrc";
+	private static final String button = "https://dl.dropboxusercontent.com/u/33984813/nuoli.png";
+	private static final String buttonPressed = "https://dl.dropboxusercontent.com/u/33984813/nuoli---hover.png";
+	private static final String button_flipped = "https://dl.dropboxusercontent.com/u/33984813/nuoli-flipped.png";
 	
-	final VerticalLayout sourceLayout = new VerticalLayout();
-	final VerticalLayout imgLayout = new VerticalLayout();
+	final private static String[] urls = MyUtil.getUrlsFromDropbox();
 
-	final AbsoluteLayout absLayout = new AbsoluteLayout();
-	final GridLayout layout = new GridLayout();
-
-	private boolean metadataVisible = false;
-	final private Button metadatabutton = new Button("Show metadata");
-	private Button dbbutton = new Button("DB");
-	private Button fbbutton = new Button("FB");
-
-	private Image image;
-
-	int imgSize=140;
-
+	//layouts and urls
+//	final private GridLayout layout = new GridLayout();
+	final private AbsoluteLayout absLayout = new AbsoluteLayout();
+	final private VerticalLayout fullscreenlayout = new VerticalLayout();
 	private MetadataViewer metadatawindow;
 
-	private int imgindex=0;
+	private boolean metadataVisible = false;
+	final private static int imgSize=140;
 
-	private ImageStrip bigStrip;
+	//imagestripdata
+	private ImageStripWrapper smallStrip = new ImageStripWrapper(urls, imgSize,5,0,true);
+	private ImageStripWrapper bigStrip = new ImageStripWrapper(urls, imgSize*4,1,2,false);
 
-	private ImageStrip smallStrip;
-
+	
 	private ArrayList<org.vaadin.peter.imagestrip.ImageStrip.Image> bigStripImageList = new ArrayList<org.vaadin.peter.imagestrip.ImageStrip.Image>();
-
+	private GridLayout gridLayout;
+	
 	@Override
 	protected void init(VaadinRequest request) {
-		initButtons();		
-		
-		injectStyles();		
-		this.setStyleName("mainWindow");
-		
-		setContent(layout);
-
+		injectCssStyles();		
+		this.setStyleName("mainWindow");		
+		setContent(createMainLayout());
+	}
+	
+	private void injectCssStyles() {
+		CSSInject css = new CSSInject(getUI());
+		css.setStyles(".mainWindow {background-color: #000000;} "
+				+ ".metadataViewer {opacity: 0.7;background-color: #ffffff;}"
+//				+ ".v-layout.v-vertical {background-color: #000000;}"
+				+ ".reindeer .v-panel-content, .reindeer .white .v-panel-content {border: 0px solid #000000}"
+				+ ".v-imagestrip .selectable .image-border {border-radius: 0px;}"
+				+ ".v-imagestrip .horizontal {background-color: #000000;}"
+				+ ".v-imagestrip {background-color: #000000;}"
+				+ ".v-imagestrip .strip-horizontal-scroller {width: 0px; height 0px;}"
+				);
+	}
+    
+    private GridLayout createMainLayout(){
+    	bigStrip.reCreateStrip();
+    	smallStrip.reCreateStrip();
+    	gridLayout = new GridLayout();
+		final VerticalLayout sourceLayout = new VerticalLayout();
 		sourceLayout.setWidth("100px");
-		sourceLayout.addComponent(dbbutton);
-		sourceLayout.addComponent(fbbutton);
 
+		final VerticalLayout imgLayout = new VerticalLayout();
+
+		Image image = MyUtil.getImage(leonidasLogo);
+		image.setWidth("50px");
+		
 		absLayout.setHeight("100%");
 		absLayout.setWidth("100%");
-		layout.setSizeFull();
-		layout.setMargin(true);
-        layout.setRows(2);
-        layout.setColumns(3);
-        layout.setSpacing(true);
-        layout.setColumnExpandRatio(0, 0f);
-        layout.setColumnExpandRatio(1, 1f);
-        layout.setColumnExpandRatio(2, 0f);
-        layout.setRowExpandRatio(0, 1f);
-        layout.setRowExpandRatio(1, 0f);
-                
-        smallStrip = createStrip(imgSize,0,true);
-                
-        layout.addComponent(sourceLayout, 0, 0);
-        layout.addComponent(absLayout, 1, 0);
-		layout.addComponent(metadatabutton, 2, 0);
-		layout.addComponent(smallStrip,0, 1, 2, 1);
+
+		gridLayout.setSizeFull();
+		gridLayout.setMargin(true);
+        gridLayout.setRows(2);
+        gridLayout.setColumns(3);
+        gridLayout.setSpacing(true);
+        gridLayout.setColumnExpandRatio(0, 0f);
+        gridLayout.setColumnExpandRatio(1, 1f);
+        gridLayout.setColumnExpandRatio(2, 0f);
+        gridLayout.setRowExpandRatio(0, 1f);
+        gridLayout.setRowExpandRatio(1, 0f);
+                				
+		Image sc = MyUtil.getImage(this.button_flipped);
+		sc.setWidth("50px");
+        sc.addClickListener(new ClickListener() {
+			@Override
+			public void click(ClickEvent event) {
+				scrollToRight(1);
+			}});
+				
+		Image scrollLeft = MyUtil.getImage(this.button);
+		scrollLeft.setWidth("50px");
+        scrollLeft.addClickListener(new ClickListener() {
+			@Override
+			public void click(ClickEvent event) {
+				scrollToLeft(1);
+			}});
+		
+        gridLayout.addComponent(image, 0, 0);
+        gridLayout.addComponent(absLayout, 1, 0);
+		gridLayout.addComponent(this.initMetaDataButton(), 2, 0);
+		gridLayout.addComponent(sc,0, 1);
+		gridLayout.addComponent(scrollLeft,2, 1);
+		gridLayout.addComponent(smallStrip.getComponent(), 1, 1);
 	
 		Panel panel = new Panel("");
-		panel.setSizeFull(); // Fill the entire given area
 		absLayout.addComponent(panel, "left: 0px; right: 0px; "+
 		                           "top: 0px; bottom: 0px;");
 		imgLayout.setSizeFull();
-		bigStrip = createStrip(imgSize*4,1,false);
-		imgLayout.addComponent(bigStrip);
+		Component component = bigStrip.getComponent();
+		imgLayout.addComponent(component);
+		imgLayout.setComponentAlignment(component, Alignment.MIDDLE_CENTER);
 		panel.setContent(imgLayout);
+		
+		initSmallStripListener();
+		initBigStripListener();
+    	return gridLayout;
+    }
+    
+	private void initBigStripListener() {
+		bigStrip.setListener(new Property.ValueChangeListener() {
+            public void valueChange(ValueChangeEvent event) {
+		        		Property property = event.getProperty();
+		        		ImageStrip.Image value = (ImageStrip.Image) property.getValue();
+		        		int imageIndex=(value.getImageIndex());
+		        		int index = bigStrip.getIndex();
+		        		changeToFullScreenImage(index);
+		            }
+		        });
+	}
 
-//		panel.
+	private void initSmallStripListener() {
+		smallStrip.setListener(new Property.ValueChangeListener() {
+            public void valueChange(ValueChangeEvent event) {
+		        		Property property = event.getProperty();
+		        		ImageStrip.Image value = (ImageStrip.Image) property.getValue();
+		        		int clickedindex = value.getImageIndex();
+		        		int moveToLeft = smallStrip.offsetComparedToMiddle(clickedindex);
+		        		//smallStrip.getIndex()
+		        		if (moveToLeft>0){
+		        			scrollToRight(Math.abs(moveToLeft));
+		        		}else if (moveToLeft<0){
+		        			scrollToLeft(moveToLeft);
+		        		}
+		            }
+		        });
+	}
+
+	protected void scrollToRight(int i) {
+		smallStrip.scrollToLeft(i);
+		bigStrip.scrollToLeft(i);
+		if(metadataVisible){
+			metadatawindow.update(new File(MyUtil.getFilename(urls[bigStrip.getIndex()])));
+		}
 
 	}
 
+	protected void scrollToLeft(int i) {
+		smallStrip.scrollToRight(i);
+		bigStrip.scrollToRight(i);
+		if(metadataVisible){
+			metadatawindow.update(new File(MyUtil.getFilename(urls[bigStrip.getIndex()])));
+		}
 
-	private void initButtons() {
-        this.metadatabutton.addClickListener(new Button.ClickListener() {
+	}
+	
+	protected void changeToFullScreenImage(int index) {		
+		System.out.println(urls);
+		System.out.println(index);
+		String url = urls[index];
+		System.out.println(url);
+		FileResource res = MyUtil.getFileResource(url);
+		Image image = new Image(url,res);
+		image.setWidth("100%");
+		image.addClickListener(new ClickListener() {
+			@Override
+			public void click(ClickEvent event) {
+				closeFullscreenView();
+			}
+        });
+		fullscreenlayout.removeAllComponents();
+		fullscreenlayout.addComponent(image);			
+		fullscreenlayout.setWidth("100%");
+		this.setContent(fullscreenlayout);
+	}
+
+	protected void closeFullscreenView() {
+		setContent(gridLayout);
+	}
+
+	private Button initMetaDataButton() {
+		final Button metadatabutton = new Button("Show metadata");
+
+        metadatabutton.addClickListener(new Button.ClickListener() {
 			@Override
 			public void buttonClick(com.vaadin.ui.Button.ClickEvent event) {
 				if (metadataVisible){
@@ -161,15 +282,26 @@ public class ImagestriptestUI extends UI implements ValueChangeListener {
 				}
 			}
         });
-        this.metadatabutton.setWidth("100px");
+        metadatabutton.setWidth("100px");
+        return metadatabutton;
 	}
 	
+	protected void hideMetadata() {        
+		absLayout.removeComponent(metadatawindow);
+	}
 
-	private ImageStrip.Image getBigStripImage(int indexIn){
-		return this.bigStripImageList.get(indexIn);
+	protected void showMetadata() {       
+		metadatawindow = new MetadataViewer(new File(MyUtil.getFilename(urls[bigStrip.getIndex()])));
+		absLayout.addComponent(metadatawindow, "top:13%; left:25%; right:25%");
+		metadatawindow.setHeight(imgSize*3 + "px");
 	}
+		
+	/*	private ImageStrip.Image getBigStripImage(int indexIn){
+	return this.bigStripImageList.get(indexIn);
+}*/
+
 	
-	private void changeImage(int indexIn){
+/*	private void changeImage(int indexIn){
 		ImageStrip.Image image = getBigStripImage(indexIn);
 		System.out.println(image.getImageIndex());
 		bigStrip.setValue(image);
@@ -187,86 +319,6 @@ public class ImagestriptestUI extends UI implements ValueChangeListener {
 //       	image.setSource(resource);
 //       	image.setHeight("100%");
 //		image.setWidth("100%");
-	}
-
-	protected void hideMetadata() {        
-		absLayout.removeComponent(metadatawindow);
-	}
-
-	protected void showMetadata() {       
-		metadatawindow = new MetadataViewer(new File(MyUtil.getFilename(urls[imgindex])));
-		absLayout.addComponent(metadatawindow, "top:0%; left:5%");
-		metadatawindow.setHeight(imgSize*4-50 + "px");
-		metadatawindow.setWidth("95%");
-	}
-
-	
-	private void injectStyles() {
-		CSSInject css = new CSSInject(getUI());
-		css.setStyles(".mainWindow {background-color: #000000;} "
-				+ ".metadataViewer {background-color: #ffffff; opacity: 0.8;}"
-				+ ".v-layout.v-vertical {background-color: #000000;}"
-				+ ".reindeer .v-panel-content, .reindeer .white .v-panel-content {border: 0px solid #000000}"
-				+ ".v-imagestrip .selectable .image-border {border-radius: 0px;}"
-				+ ".v-imagestrip .horizontal {background-color: #000000;}"
-				+ ".v-imagestrip {background-color: #000000;}"
-				);
-	}
-
-	private ImageStrip createStrip(int imgSize, int maxImage,boolean crop) {
-	     // Create new horizontally aligned strip of images
-        ImageStrip strip = new ImageStrip();
-
-        // Add ValueChangeListener to listen for image selection
-        strip.addValueChangeListener(this);
-        
-        // Use animation
-        strip.setAnimated(true);
-
-        // Make strip to behave like select
-        strip.setSelectable(true);
-        
-        // Set size of the box surrounding the images
-        strip.setImageBoxWidth(imgSize);
-        strip.setImageBoxHeight(imgSize);
-
-        // Set maximum size of the images
-        strip.setImageMaxWidth(imgSize);
-        strip.setImageMaxHeight(imgSize);
-        
-        strip.setHeight(imgSize, UNITS_PIXELS);
-        
-        // Limit how many images are visible at most simultaneously
-        if (maxImage!=0){
-            strip.setMaxAllowed(maxImage);        	
-        }
-        if (urls != null){
-	        for(String url:urls){
-	            addImage(strip, url,imgSize,crop);        	
-	        }
-        }
-        strip.setSelectable(true);
-		return strip;
-	}
-	
-	private void addImage(ImageStrip strip, String url,int imgSize,boolean crop){
-		String filename=MyUtil.getFilename(url);
-		if (crop){
-			String filenamecropped=MyUtil.getCroppedFilename(url);
-			strip.addImage(MyUtil.getCroppedFile(url,filename,filenamecropped,imgSize));			
-		}else{
-			String filenamescaled=MyUtil.getScaledFilename(url);
-			org.vaadin.peter.imagestrip.ImageStrip.Image tmp = strip.addImage(MyUtil.getScaledFile(url,filename,filenamescaled,imgSize));						
-			bigStripImageList.add(tmp);
-		}
-	}
-
-	@Override
-	public void valueChange(ValueChangeEvent event) {
-		Property property = event.getProperty();
-		ImageStrip.Image value = (ImageStrip.Image) property.getValue();
-		int index = value.getImageIndex();
-		changeImage(index);
-	}
+	}*/
 
 }

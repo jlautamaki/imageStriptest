@@ -1,5 +1,6 @@
 package fi.leonidasoy.imagestrip;
 
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.File;
@@ -13,10 +14,12 @@ import java.util.ArrayList;
 import javax.imageio.ImageIO;
 
 import org.imgscalr.Scalr;
+import org.imgscalr.Scalr.Rotation;
 
 import com.dropbox.core.DbxClient;
 import com.dropbox.core.DbxException;
 import com.vaadin.server.FileResource;
+import com.vaadin.ui.Image;
 
 public class MyUtil {
 	static int tmp = 4;
@@ -35,15 +38,19 @@ public class MyUtil {
         return "scaledimage"+hash+".jpg";		
 	}
 
+	static public FileResource getFileResource(String url) {
+		File file = downloadFile(url);
+        return new FileResource(file);
+	}
 	
-	static public FileResource getCroppedFile(String url, String filename, String filenamecropped,int imgSize) {
-    	File file = downloadFile(url,filename);
-        return cropAndResizeFile(file,filenamecropped,imgSize,true);
+	static public FileResource getCroppedFile(String url, int imgSize) {
+    	File file = downloadFile(url);
+        return cropAndResizeFile(file,getCroppedFilename(url),imgSize,true);
 	}
 
-	static public FileResource getScaledFile(String url, String filename, String filenamescaled,int imgSize) {
-    	File file = downloadFile(url,filename);
-        return cropAndResizeFile(file,filenamescaled,imgSize,false);
+	static public FileResource getScaledFile(String url, int imgSize) {
+    	File file = downloadFile(url);
+        return cropAndResizeFile(file,getScaledFilename(url),imgSize,false);
 	}
 
 	/*
@@ -55,14 +62,14 @@ public class MyUtil {
 
 	<dependency org="commons-io" name="commons-io" rev="2.4"/>*/
 
-	static public File downloadFile(String urlString, String filename) {
-		URL url;
+	static public File downloadFile(String urlString) {
+		String filename = getFilename(urlString);
 		Path path = Paths.get(filename);
 		boolean notexists = Files.notExists(path);
 		File destination = new File(filename);
 		if (notexists) {
 			try {
-				url = new URL(urlString);
+				URL url = new URL(urlString);
 				System.out.println("Downloading " + url);
 				org.apache.commons.io.FileUtils.copyURLToFile(url, destination);
 			} catch (IOException e) {
@@ -116,6 +123,23 @@ public class MyUtil {
 		return null;
 	}
 
+/*	public static File rotate(File file, Rotation rotation){
+		File destination = new File(file.getName()+"mod.jpg");
+		BufferedImage in;
+		try {
+	        int newWidth = 50;
+	        
+			in = ImageIO.read(file);
+			BufferedImage imgout2 = Scalr.rotate(in,rotation,Scalr.OP_ANTIALIAS);			
+	        ImageIO.write(imgout2, "jpg", destination);	        
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return destination;
+	}
+*/
+	
 	static public double calculateScaling(int height, int width,int imgSize) {
 		int smaller = height;
 		if (width<height){
@@ -138,41 +162,33 @@ public class MyUtil {
 		} catch (DbxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		
-		String[] urls = list.toArray(new String[] {});
-/*		String[] urls = {
-	    		"http://cdn2.business2community.com/wp-content/uploads/2013/04/google-.jpg",
-	            "http://upload.wikimedia.org/wikipedia/commons/e/ec/Jurvetson_Google_driverless_car_trimmed.jpg",
-	            "http://www.picshunger.com/wp-content/uploads/2014/04/summer-31.jpg",
-	            "http://fc06.deviantart.net/fs70/i/2013/170/5/2/ivy_and_harley_summer_vacation_by_pennysilver-d69s6wr.jpg",
-	            "http://www.uwec.edu/Summer/images/2014-Summer-Session-WEB-Ad-2.jpg",
-	            "http://hdwallimg.com/wp-content/uploads/2014/02/Funny-Cat-Night-Wallpaper-HD-.jpg",
-	            "http://img2.wikia.nocookie.net/__cb20110424032627/half-life/en/images/a/a1/TRIVIAL_TEST.jpg",
-	            "http://braukaiser.com/wiki/images/6/63/Batch_61_iodine_test.jpg",
-	            "http://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Pride_%26_Happy.jpg/682px-Pride_%26_Happy.jpg",
-	            "http://img3.wikia.nocookie.net/__cb20120709013602/fantendo/images/a/ab/The-Mario-Bros-mario-and-luigi-9298164-1955-2560.jpg",
-	            "http://www.mariowiki.com/images/thumb/b/bf/BrawlWario.jpg/220px-BrawlWario.jpg",
-	            "http://snowbrains.com/wp-content/uploads/2014/01/url-2.jpeg",
-	            "http://images2.visitnsw.com/sites/default/files/galleries/snowboarding-perisher.jpg",
-	            "http://upload.wikimedia.org/wikipedia/commons/9/96/Midsummer_bonfire_in_Pielavasi,_Finland.JPG", 
-	    };*/
-		
+		}		
+		return list.toArray(new String[] {});
+	}
 
-/*        DbxRequestConfig config = new DbxRequestConfig(
-            "JavaTutorial/1.0", Locale.getDefault().toString());
-        DbxWebAuthNoRedirect webAuth = new DbxWebAuthNoRedirect(config, n);
+	
+    public static BufferedImage rotate(BufferedImage image, int degrees) {
+        int w = image.getWidth();
+        int h = image.getHeight();
 
-        String accessToken = authFinish.accessToken;
-        DbxClient client = new DbxClient(config, accessToken);
-        
-        DbxEntry.WithChildren listing = client.getMetadataWithChildren("/Jari's%20photos");
-        System.out.println("Files in the root path:");
-        for (DbxEntry child : listing.children) {
-            System.out.println("	" + child.name + ": " + child.toString());
-        }
-*/      
-        //"Jari's%20photos"
-		return urls;
+        // Enough space for the image
+        int nd = (int) Math.ceil(Math.sqrt(w * w + h * h)) + 2;
+
+        BufferedImage t = new BufferedImage(nd, nd, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = t.createGraphics();
+        g.rotate(Math.toRadians(degrees), nd / 2, nd / 2);
+        g.translate(nd / 2 - w / 2, nd / 2 - h / 2);
+
+        g.drawImage(image, 0, 0, null);
+        g.dispose();
+
+        // Crop the invisible parts
+        return t;
+    }
+	
+	public static Image getImage(String url) {
+		File file = downloadFile(url);
+		FileResource resource = new FileResource(file);
+		return new Image("",resource);
 	}
 }
