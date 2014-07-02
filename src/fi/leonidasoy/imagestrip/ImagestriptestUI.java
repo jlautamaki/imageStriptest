@@ -127,10 +127,12 @@ public class ImagestriptestUI extends UI {
 				+ ".metadataViewer {opacity: 0.7;background-color: #ffffff;}"
 //				+ ".v-layout.v-vertical {background-color: #000000;}"
 				+ ".reindeer .v-panel-content, .reindeer .white .v-panel-content {border: 0px solid #000000}"
-				+ ".v-imagestrip .selectable .image-border {border-radius: 0px;}"
-				+ ".v-imagestrip .horizontal {background-color: #000000;}"
-				+ ".v-imagestrip {background-color: #000000;}"
+				+ ".v-imagestrip .image-border {border-radius: 0px; background-color: #000000;}"
+				+ ".v-imagestrip .image-border-selected {background-color: #629632}"
+//				+ ".v-imagestrip .horizontal {background-color: #000000;}"
+//				+ ".v-imagestrip {background-color: #000000;}"
 				+ ".v-imagestrip .strip-horizontal-scroller {width: 0px; height 0px;}"
+				+ ".v-label.v-has-width {color: #ffffff}"
 				);
 	}
     
@@ -160,9 +162,9 @@ public class ImagestriptestUI extends UI {
         gridLayout.setRowExpandRatio(0, 1f);
         gridLayout.setRowExpandRatio(1, 0f);
                 				
-		Image sc = MyUtil.getImage(this.button_flipped);
-		sc.setWidth("50px");
-        sc.addClickListener(new ClickListener() {
+		Image scrollRight = MyUtil.getImage(this.button_flipped);
+		scrollRight.setWidth("50px");
+        scrollRight.addClickListener(new ClickListener() {
 			@Override
 			public void click(ClickEvent event) {
 				scrollToRight(1);
@@ -179,10 +181,14 @@ public class ImagestriptestUI extends UI {
         gridLayout.addComponent(image, 0, 0);
         gridLayout.addComponent(absLayout, 1, 0);
 		//gridLayout.addComponent(this.initMetaDataButton(), 2, 0);
-		gridLayout.addComponent(sc,0, 1);
+		gridLayout.addComponent(scrollRight,0, 1);
 		gridLayout.addComponent(scrollLeft,2, 1);
 		gridLayout.addComponent(smallStrip.getComponent(), 1, 1);
 	
+		gridLayout.setComponentAlignment(scrollRight, Alignment.MIDDLE_CENTER);
+		gridLayout.setComponentAlignment(scrollLeft, Alignment.MIDDLE_CENTER);
+
+		
 		Panel panel = new Panel("");
 		absLayout.addComponent(panel, "left: 0px; right: 0px; "+
 		                           "top: 0px; bottom: 0px;");
@@ -211,6 +217,7 @@ public class ImagestriptestUI extends UI {
 	}
 
 	private void initSmallStripListener() {
+		smallStrip.setMiddleSelected();
 		smallStrip.setListener(new Property.ValueChangeListener() {
             public void valueChange(ValueChangeEvent event) {
 		        		Property property = event.getProperty();

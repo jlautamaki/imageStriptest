@@ -78,7 +78,7 @@ public class MetadataViewer extends Panel{
 			    		if (first){
 					    	first=false;			    			
 			    		}else{
-			    			txt += "; ";
+			    			txt += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 			    		}
 			    		txt += tag.toString().replace("[Exif SubIFD] ", "").replace("[Exif IFD0] ", "");
 			    	}

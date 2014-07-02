@@ -94,13 +94,14 @@ public class ImageStripWrapper {
 	}
 
 	public int getIndex() {
-		setSomethingElseSelected();
+		setMiddleSelected();
 		return offset;
 	}
 	
-	private void setSomethingElseSelected() {
+	void setMiddleSelected() {
 		strip.removeValueChangeListener(listener);			
-		int value = (this.offset+urls.length/2)%urls.length;
+		//int value = (this.offset+urls.length/2)%urls.length;
+		int value = (this.offset+getMiddleOffset())%urls.length;
 		strip.setValue(images.get(value));
 		if (listener!=null){
 			strip.addValueChangeListener(listener);						
@@ -121,7 +122,7 @@ public class ImageStripWrapper {
 		i=1;
 		offset=(offset+i)%urls.length;
 		strip.scrollToLeft();
-		setSomethingElseSelected();
+		setMiddleSelected();
 	}
 
 
@@ -132,13 +133,12 @@ public class ImageStripWrapper {
 			offset+=urls.length;
 		}
 		strip.scrollToRight();
-		setSomethingElseSelected();
+		setMiddleSelected();
 	}
 
 	
 	public int offsetComparedToMiddle(int clickedindex) {
 		int middleOffset = getMiddleOffset();
-		int offser = offset;
 		int value = clickedindex-offset;
 		if (value < 0){
 			value+=urls.length;
