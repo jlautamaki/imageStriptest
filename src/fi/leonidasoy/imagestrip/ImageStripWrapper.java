@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import org.vaadin.peter.imagestrip.ImageStrip;
 import org.vaadin.peter.imagestrip.ImageStrip.Image;
 
-import com.vaadin.data.Property;
-import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.Component;
@@ -47,8 +45,8 @@ public class ImageStripWrapper {
        striptmp.setSelectable(true);
        
        // Set size of the box surrounding the images
-       striptmp.setImageBoxWidth(imgSize);
-       striptmp.setImageBoxHeight(imgSize);
+       striptmp.setImageBoxWidth(imgSize+10);
+       striptmp.setImageBoxHeight(imgSize+10);
 
        // Set maximum size of the images
        striptmp.setImageMaxWidth(imgSize);

@@ -9,47 +9,8 @@ import com.drew.imaging.jpeg.JpegProcessingException;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
-import com.vaadin.ui.AbsoluteLayout;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Panel;
-import com.vaadin.ui.VerticalLayout;
 
-@SuppressWarnings("serial")
-public class MetadataViewer extends Panel{
-			
-	AbsoluteLayout absLayout = new AbsoluteLayout();
-	VerticalLayout layout = new VerticalLayout();
-
-    public MetadataViewer(File file) {
-    	//style injected at UI-class
-    	this.addStyleName("metadataViewer");
-    	this.setContent(layout);
-    	update(file);
-    }
-    
-	public void update(File file) {
-		layout.removeAllComponents();
-        try {
-			Metadata metadata = readMetadata(file);
-			// iterate through metadata directories
-			for (Directory directory : metadata.getDirectories()) {
-			    for (Tag tag : directory.getTags()) {
-			    	Label label = new Label(tag.toString());
-			    	layout.addComponent(label);
-			    }
-			}
-		} catch (JpegProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
+public class MetadataExtractor{
 	/*
 	  	http://mvnrepository.com/artifact/com.drewnoakes/metadata-extractor/2.6.2
 		Maven:

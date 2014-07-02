@@ -3,8 +3,6 @@ package fi.leonidasoy.imagestrip;
 import com.dropbox.core.DbxClient;
 import com.dropbox.core.DbxEntry;
 import com.dropbox.core.DbxException;
-import fi.leonidasoy.imagestrip.Album;
-import fi.leonidasoy.imagestrip.Picture;
 
 import java.util.ArrayList;
 import java.util.Collection;

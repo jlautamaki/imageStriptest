@@ -3,10 +3,7 @@ package fi.leonidasoy.imagestrip;
 import com.dropbox.core.DbxAppInfo;
 import com.dropbox.core.DbxClient;
 import com.dropbox.core.DbxRequestConfig;
-import com.dropbox.core.DbxWebAuthNoRedirect;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Locale;
 import java.util.Properties;
 

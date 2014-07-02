@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import javax.imageio.ImageIO;
 
 import org.imgscalr.Scalr;
-import org.imgscalr.Scalr.Rotation;
 
 import com.dropbox.core.DbxClient;
 import com.dropbox.core.DbxException;
