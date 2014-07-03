@@ -1,11 +1,13 @@
 package fi.leonidasoy.imagestrip;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import javax.servlet.annotation.WebServlet;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.VaadinServletConfiguration;
 
-import java.io.File;
 import org.vaadin.cssinject.CSSInject;
 import org.vaadin.peter.imagestrip.ImageStrip;
 
@@ -85,19 +87,29 @@ public class ImagestriptestUI extends UI {
 	<dependency org="com.dropbox.core" name="dropbox-core-sdk" rev="1.7.6"/>	
 	*/
 
-	private static final String leonidasLogo = "https://db.tt/bnvnVqrc";
-	private static final String button = "https://dl.dropboxusercontent.com/u/33984813/nuoli.png";
-	//private static final String buttonPressed = "https://dl.dropboxusercontent.com/u/33984813/nuoli---hover.png";
-	private static final String button_flipped = "https://dl.dropboxusercontent.com/u/33984813/nuoli-flipped.png";
+	private static final URL leonidasLogo;
+	private static final URL button;
+	//private static final URL buttonPressed;
+	private static final URL button_flipped;
 	
-	final private static String[] urls = MyUtil.getUrlsFromDropbox();
-
+	static{
+		try {
+			leonidasLogo = new URL("https://db.tt/bnvnVqrc");
+	    	button = new URL("https://dl.dropboxusercontent.com/u/33984813/nuoli.png");
+	    	//buttonPressed = new URL("https://dl.dropboxusercontent.com/u/33984813/nuoli---hover.png");
+	    	button_flipped = new URL("https://dl.dropboxusercontent.com/u/33984813/nuoli-flipped.png");
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			throw new RuntimeException("Failed to initialize private static final values");
+		}
+	}
+	
 	//layouts and urls
 	final private static int imgSize=140;
 
 	//imagestripdata
-	private ImageStripWrapper smallStrip = new ImageStripWrapper(urls, imgSize,5,0,true);
-	private ImageStripWrapper bigStrip = new ImageStripWrapper(urls, imgSize*4,1,2,false);
+	private ImageStripWrapper smallStrip = new ImageStripWrapper(MyImage.getImages(), imgSize,5,0,true);
+	private ImageStripWrapper bigStrip = new ImageStripWrapper(MyImage.getImages(), imgSize*4,1,2,false);
 	
 	private GridLayout gridLayout;
 	private Label imgMetaDataLabel;
@@ -182,7 +194,7 @@ public class ImagestriptestUI extends UI {
 		imgLayout.addComponent(component);
 		imgLayout.setComponentAlignment(component, Alignment.MIDDLE_CENTER);
 		panel.setContent(imgLayout);
-		imgMetaDataLabel = new Label(this.getImgMetaDataLabelText());
+		imgMetaDataLabel = new Label(this.getImgMetaDataLabelText(this.bigStrip.getIndex()));
 		imgMetaDataLabel.setContentMode(ContentMode.HTML);
 		absLayout.addComponent(imgMetaDataLabel, "left: 0px; right: 0px; "+
                 "bottom: 0px;");
@@ -222,26 +234,27 @@ public class ImagestriptestUI extends UI {
 	protected void scrollToRight(int i) {
 		smallStrip.scrollToLeft(i);
 		bigStrip.scrollToLeft(i);
-		this.imgMetaDataLabel.setValue(getImgMetaDataLabelText());
+		this.imgMetaDataLabel.setValue(getImgMetaDataLabelText(bigStrip.getIndex()));
 	}
 
 	//scrolls both strips and updates other fields
 	protected void scrollToLeft(int i) {
 		smallStrip.scrollToRight(i);
 		bigStrip.scrollToRight(i);
-		this.imgMetaDataLabel.setValue(getImgMetaDataLabelText());
+		this.imgMetaDataLabel.setValue(getImgMetaDataLabelText(bigStrip.getIndex()));
 	}
 
 	//String that contains some information about image
-	private String getImgMetaDataLabelText() {
-		return "<center>"+MetadataExtractor.getImageLabelText(new File(MyUtil.getFilename(urls[bigStrip.getIndex()]))) + "</center>";
+	private String getImgMetaDataLabelText(int index) {
+		return "<center>" + MyImage.getImage(index).getMetadata() + "</center>";
 	}
 
 	//opens image to fullscreen
 	protected void changeToFullScreenImage(int index) {		
-		String url = urls[index];
-		FileResource res = MyUtil.getFileResource(url);
-		Image image = new Image(url,res);
+		MyImage selectedImage = MyImage.getImage(index);
+		URL url = selectedImage.getUrl();
+		FileResource res = selectedImage.getFileResource();
+		Image image = new Image(url.getFile(),res);
 		image.setWidth("100%");
 		image.addClickListener(new ClickListener() {
 			@Override

@@ -1,6 +1,5 @@
 package fi.leonidasoy.imagestrip;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 
@@ -9,6 +8,7 @@ import com.drew.imaging.jpeg.JpegProcessingException;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
+import com.vaadin.server.FileResource;
 
 public class MetadataExtractor{
 	/*
@@ -22,15 +22,15 @@ public class MetadataExtractor{
 		Ivy:
 			<dependency org="com.drewnoakes" name="metadata-extractor" rev="2.6.2"/>
 	 */
-	private static Metadata readMetadata(File file) throws MalformedURLException, IOException, JpegProcessingException{				
-		return JpegMetadataReader.readMetadata(file);
+	private static Metadata readMetadata(FileResource fileResource) throws MalformedURLException, IOException, JpegProcessingException{				
+		return JpegMetadataReader.readMetadata(fileResource.getSourceFile());
 	}
 
-	public static String getImageLabelText(File file) {
+	public static String getImageLabelText(FileResource fileResource) {
 		String txt = "";
 		boolean first = true;
 		try {
-			Metadata metadata = readMetadata(file);
+			Metadata metadata = readMetadata(fileResource);
 			// iterate through metadata directories
 			for (Directory directory : metadata.getDirectories()) {
 			    for (Tag tag : directory.getTags()) {

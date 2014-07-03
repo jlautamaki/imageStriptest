@@ -11,10 +11,7 @@ import com.vaadin.ui.Component;
 
 public class ImageStripWrapper {
 
-	private ArrayList<Image> images = new ArrayList<Image>();
 	private ImageStrip strip;
-	//original imageurls
-	final private String[] urls;
 	//current offset to original
 	private int offset;
 	//are images cropped?
@@ -24,9 +21,11 @@ public class ImageStripWrapper {
 	//number of images visible
 	final private int numberOfImages;
 	private ValueChangeListener listener = null;
+	final private MyImage[] images;
+	private ArrayList<ImageStrip.Image> imagesAddedToStrip = new ArrayList<ImageStrip.Image>();
 	
-	public ImageStripWrapper(String[] urls, int imgSize, int numberOfImages, int offset, boolean cropImages) {
-		this.urls=urls;
+	public ImageStripWrapper(MyImage[] images, int imgSize, int numberOfImages, int offset, boolean cropImages) {
+		this.images=images;
 		this.offset = offset;
 		this.cropImages = cropImages;
 		this.imgSize = imgSize;
@@ -56,13 +55,13 @@ public class ImageStripWrapper {
        
        // Limit how many images are visible at most simultaneously
        striptmp.setMaxAllowed(this.numberOfImages);        	
-       if (urls != null){
-    	   images.clear();
-	        for(int i=0; i<urls.length; i++){
-	        	String url = urls[calculateUrlIndex(i)];
-	        	striptmp = addImage(striptmp, url,this.cropImages,this.imgSize);        	
-	        }
-       }
+	   
+       this.imagesAddedToStrip.clear();
+        for(int i=0; i<this.images.length; i++){
+        	MyImage img = images[calculateUrlIndex(i)];
+        	striptmp = addImage(striptmp, img,this.cropImages,this.imgSize);        	
+        }
+
        striptmp.setSelectable(true);
        if (this.listener!=null){
    			strip.addValueChangeListener(listener);			
@@ -72,18 +71,18 @@ public class ImageStripWrapper {
 
 	public int calculateUrlIndex(int i) {
 		//System.out.println("index = "+i+", offset = " + offset);
-		return (i+offset)%urls.length;
+		return (i+offset)%images.length;
 	}
 
 
-	private ImageStrip addImage(ImageStrip tmpStrip, String url, boolean cropImages, int imgSize){
+	private ImageStrip addImage(ImageStrip tmpStrip, MyImage myimg, boolean cropImages, int imgSize){
 		Image img;
 		if (cropImages){
-			img = tmpStrip.addImage(MyUtil.getCroppedFile(url,imgSize));			
+			img = tmpStrip.addImage(myimg.getCroppedFileResource(imgSize));			
 		}else{
-			img = tmpStrip.addImage(MyUtil.getScaledFile(url,imgSize));						
+			img = tmpStrip.addImage(myimg.getScaledFileResource(imgSize));						
 		}
-		images.add(img);
+		this.imagesAddedToStrip.add(img);
 		return tmpStrip;
 	}
 
@@ -99,8 +98,8 @@ public class ImageStripWrapper {
 	void setMiddleSelected() {
 		strip.removeValueChangeListener(listener);			
 		//int value = (this.offset+urls.length/2)%urls.length;
-		int value = (this.offset+getMiddleOffset())%urls.length;
-		strip.setValue(images.get(value));
+		int value = (this.offset+getMiddleOffset())%images.length;
+		strip.setValue(this.imagesAddedToStrip.get(value));
 		if (listener!=null){
 			strip.addValueChangeListener(listener);						
 		}
@@ -118,7 +117,7 @@ public class ImageStripWrapper {
 
 	public void scrollToLeft(int i) {
 		i=1;
-		offset=(offset+i)%urls.length;
+		offset=(offset+i)%images.length;
 		strip.scrollToLeft();
 		setMiddleSelected();
 	}
@@ -128,7 +127,7 @@ public class ImageStripWrapper {
 		i=1;
 		offset--;
 		if (offset<0){
-			offset+=urls.length;
+			offset+=images.length;
 		}
 		strip.scrollToRight();
 		setMiddleSelected();
@@ -139,7 +138,7 @@ public class ImageStripWrapper {
 		int middleOffset = getMiddleOffset();
 		int value = clickedindex-offset;
 		if (value < 0){
-			value+=urls.length;
+			value+=images.length;
 		}
 		value-=middleOffset;
 		return value;
