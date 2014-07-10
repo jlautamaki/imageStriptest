@@ -1,8 +1,5 @@
 package fi.leonidasoy.imagestrip;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import javax.servlet.annotation.WebServlet;
 
 import com.vaadin.annotations.Theme;
@@ -10,6 +7,9 @@ import com.vaadin.annotations.VaadinServletConfiguration;
 
 import org.vaadin.cssinject.CSSInject;
 import org.vaadin.peter.imagestrip.ImageStrip;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -108,8 +108,8 @@ public class ImagestriptestUI extends UI {
 	final private static int imgSize=140;
 
 	//imagestripdata
-	private ImageStripWrapper smallStrip = new ImageStripWrapper(MyImage.getImages(), imgSize,5,0,true);
-	private ImageStripWrapper bigStrip = new ImageStripWrapper(MyImage.getImages(), imgSize*4,1,2,false);
+	final private ImageStripWrapper smallStrip = new ImageStripWrapper(MyImage.getImages(), imgSize,5,0,true);
+	final private ImageStripWrapper bigStrip = new ImageStripWrapper(MyImage.getImages(), imgSize*4,1,2,false);
 	
 	private GridLayout gridLayout;
 	private Label imgMetaDataLabel;
@@ -124,8 +124,9 @@ public class ImagestriptestUI extends UI {
 	private void injectCssStyles() {
 		CSSInject css = new CSSInject(getUI());
 		css.setStyles(".mainWindow {background-color: #000000;} "
-				+ ".metadataViewer {opacity: 0.7;background-color: #ffffff;}"
+				+ ".imageBorder {border: 2px dashed rgb(0,234,80); margin-left: -2px !important;}"
 				+ ".reindeer .v-panel-content, .reindeer .white .v-panel-content {border: 0px solid #000000}"
+				+ ".v-imagestrip {background-color: #000000;}"
 				+ ".v-imagestrip .image-border {border-radius: 0px; background-color: #000000;}"
 				+ ".v-imagestrip .strip-horizontal-scroller {width: 0px; height 0px;}"
 				+ ".v-label.v-has-width {color: #ffffff}"
@@ -144,10 +145,10 @@ public class ImagestriptestUI extends UI {
 		Image image = MyUtil.getImage(leonidasLogo);
 		image.setWidth("50px");
 		
-		final AbsoluteLayout absLayout = new AbsoluteLayout();
-		absLayout.setHeight("100%");
-		absLayout.setWidth("100%");
-
+		final AbsoluteLayout bigStripLayout = new AbsoluteLayout();
+		bigStripLayout.setHeight("100%");
+		bigStripLayout.setWidth("100%");
+		
 		gridLayout.setSizeFull();
 		gridLayout.setMargin(true);
         gridLayout.setRows(2);
@@ -174,20 +175,43 @@ public class ImagestriptestUI extends UI {
 			public void click(ClickEvent event) {
 				scrollToLeft(1);
 			}});
+
+        Component sStrip = smallStrip.getComponent(); 
+		final AbsoluteLayout smallStripLayout = new AbsoluteLayout();
+		
+		//some additional space (+ 5) for border around the middle image
+		String height = (sStrip.getHeight() + 5) + "" + sStrip.getHeightUnits();
+		String borderwidth = (sStrip.getHeight() + 10) + "" + sStrip.getHeightUnits();
+		smallStripLayout.setHeight(height);
+		smallStripLayout.setWidth("100%");
+		
+		smallStripLayout.addComponent(sStrip, "left: 0px; right: 0px; "+
+                "top: 0px; bottom: 0px;");
+        
+		Panel borders = new Panel();
+		borders.addStyleName("imageBorder");
+		borders.setWidth(borderwidth);
+		borders.setHeight(height);
+		VerticalLayout layoutforcenteringpanel = new VerticalLayout();
+		layoutforcenteringpanel.addComponent(borders);
+
+		smallStripLayout.addComponent(layoutforcenteringpanel,"left: 0px; right: 0px; "+
+                "top: 0px; bottom: 0px;");
+		layoutforcenteringpanel.addComponent(borders);
+		layoutforcenteringpanel.setComponentAlignment(borders, Alignment.TOP_CENTER);
 		
         gridLayout.addComponent(image, 0, 0);
-        gridLayout.addComponent(absLayout, 1, 0);
+        gridLayout.addComponent(bigStripLayout, 1, 0);
 		//gridLayout.addComponent(this.initMetaDataButton(), 2, 0);
 		gridLayout.addComponent(scrollRight,0, 1);
 		gridLayout.addComponent(scrollLeft,2, 1);
-		gridLayout.addComponent(smallStrip.getComponent(), 1, 1);
-	
+		gridLayout.addComponent(smallStripLayout, 1, 1);
+			
 		gridLayout.setComponentAlignment(scrollRight, Alignment.MIDDLE_CENTER);
 		gridLayout.setComponentAlignment(scrollLeft, Alignment.MIDDLE_CENTER);
-
 		
 		Panel panel = new Panel("");
-		absLayout.addComponent(panel, "left: 0px; right: 0px; "+
+		bigStripLayout.addComponent(panel, "left: 0px; right: 0px; "+
 		                           "top: 0px; bottom: 0px;");
 		imgLayout.setSizeFull();
 		Component component = bigStrip.getComponent();
@@ -196,7 +220,7 @@ public class ImagestriptestUI extends UI {
 		panel.setContent(imgLayout);
 		imgMetaDataLabel = new Label(this.getImgMetaDataLabelText(this.bigStrip.getIndex()));
 		imgMetaDataLabel.setContentMode(ContentMode.HTML);
-		absLayout.addComponent(imgMetaDataLabel, "left: 0px; right: 0px; "+
+		bigStripLayout.addComponent(imgMetaDataLabel, "left: 0px; right: 0px; "+
                 "bottom: 0px;");
 		
 		initSmallStripListener();
