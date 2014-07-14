@@ -116,7 +116,7 @@ public class ImageStripWrapper {
 
 
 	public void scrollToLeft(int i) {
-		i=1;
+		//i=1;
 		offset=(offset+i)%images.length;
 		strip.scrollToLeft();
 		setMiddleSelected();
@@ -124,7 +124,7 @@ public class ImageStripWrapper {
 
 
 	public void scrollToRight(int i) {
-		i=1;
+		//i=1;
 		offset--;
 		if (offset<0){
 			offset+=images.length;
@@ -142,6 +142,14 @@ public class ImageStripWrapper {
 		}
 		value-=middleOffset;
 		return value;
+	}
+
+	public Unit getHeightUnits() {
+		return strip.getHeightUnits();
+	}
+
+	public float getHeight() {
+		return strip.getHeight();
 	}
 }
 

@@ -22,6 +22,7 @@ import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbsoluteLayout;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
@@ -124,10 +125,11 @@ public class ImagestriptestUI extends UI {
 	private void injectCssStyles() {
 		CSSInject css = new CSSInject(getUI());
 		css.setStyles(".mainWindow {background-color: #000000;} "
-				+ ".imageBorder {border: 2px dashed rgb(0,234,80); margin-left: -2px !important;}"
-				+ ".reindeer .v-panel-content, .reindeer .white .v-panel-content {border: 0px solid #000000}"
-				+ ".v-imagestrip {background-color: #000000;}"
-				+ ".v-imagestrip .image-border {border-radius: 0px; background-color: #000000;}"
+	//			+ ".cssLayout {background-color: #0f0f0f;} "
+				+ ".imageBorder {border: 2px dashed rgb(0,234,80); margin-left: -77px !important;}"
+				+ ".reindeer .v-panel-content, .reindeer .white .v-panel-content {border: 0px solid rgba(0,0,0,0)}"
+				+ ".v-imagestrip {background-color: rgba(0,0,0,0);}"
+				+ ".v-imagestrip .image-border {border-radius: 0px; background-color: rgba(0,0,0,0);}"
 				+ ".v-imagestrip .strip-horizontal-scroller {width: 0px; height 0px;}"
 				+ ".v-label.v-has-width {color: #ffffff}"
 				);
@@ -175,37 +177,12 @@ public class ImagestriptestUI extends UI {
 			public void click(ClickEvent event) {
 				scrollToLeft(1);
 			}});
-
-        Component sStrip = smallStrip.getComponent(); 
-		final AbsoluteLayout smallStripLayout = new AbsoluteLayout();
-		
-		//some additional space (+ 5) for border around the middle image
-		String height = (sStrip.getHeight() + 5) + "" + sStrip.getHeightUnits();
-		String borderwidth = (sStrip.getHeight() + 10) + "" + sStrip.getHeightUnits();
-		smallStripLayout.setHeight(height);
-		smallStripLayout.setWidth("100%");
-		
-		smallStripLayout.addComponent(sStrip, "left: 0px; right: 0px; "+
-                "top: 0px; bottom: 0px;");
-        
-		Panel borders = new Panel();
-		borders.addStyleName("imageBorder");
-		borders.setWidth(borderwidth);
-		borders.setHeight(height);
-		VerticalLayout layoutforcenteringpanel = new VerticalLayout();
-		layoutforcenteringpanel.addComponent(borders);
-
-		smallStripLayout.addComponent(layoutforcenteringpanel,"left: 0px; right: 0px; "+
-                "top: 0px; bottom: 0px;");
-		layoutforcenteringpanel.addComponent(borders);
-		layoutforcenteringpanel.setComponentAlignment(borders, Alignment.TOP_CENTER);
 		
         gridLayout.addComponent(image, 0, 0);
         gridLayout.addComponent(bigStripLayout, 1, 0);
-		//gridLayout.addComponent(this.initMetaDataButton(), 2, 0);
 		gridLayout.addComponent(scrollRight,0, 1);
 		gridLayout.addComponent(scrollLeft,2, 1);
-		gridLayout.addComponent(smallStripLayout, 1, 1);
+		gridLayout.addComponent(createSmallStripLayout(), 1, 1);
 			
 		gridLayout.setComponentAlignment(scrollRight, Alignment.MIDDLE_CENTER);
 		gridLayout.setComponentAlignment(scrollLeft, Alignment.MIDDLE_CENTER);
@@ -228,7 +205,60 @@ public class ImagestriptestUI extends UI {
     	return gridLayout;
     }
 
-    //listeners for the bigStrip
+    private Component createSmallStripLayout() {
+        //some additional space (+ 5) for border around the middle image
+		String height = (smallStrip.getHeight() + 5) + "" + smallStrip.getHeightUnits();
+		final int borderwidthint = (int) (smallStrip.getHeight() + 10);
+		final String borderwidth =  borderwidthint + "" + smallStrip.getHeightUnits();
+		
+		final CssLayout test = new CssLayout(){
+            @Override
+            protected String getCss(final Component c) {
+            	int uglyHack = getComponentIndex(c);
+            	if (uglyHack==0){
+            		return "";
+            	}else{
+            		String tmp = "position: absolute; top: 0px; left: 50%;";
+            		System.out.print(tmp);
+                	return tmp;
+            		
+            	}            	
+            }
+        };
+		test.setHeight(height);
+		test.setWidth("100%");
+				
+    	//absolutelayout for layouting components in z-order
+    	final AbsoluteLayout smallStripLayout = new AbsoluteLayout();
+		smallStripLayout.setHeight(height);
+		smallStripLayout.setWidth("100%");
+		
+    	//strip that shows images
+		smallStripLayout.addComponent(smallStrip.getComponent(), "left: 0px; right: 0px; "+
+                "top: 0px; bottom: 0px;");
+		
+		//components that shows border around middle image and some layouting
+		Panel borders = new Panel();
+		borders.addStyleName("imageBorder");
+		borders.setWidth(borderwidth);
+		borders.setHeight(height);
+//		VerticalLayout layoutforcenteringpanel = new VerticalLayout();
+//		layoutforcenteringpanel.addComponent(borders);
+//		smallStripLayout.addComponent(layoutforcenteringpanel,"left: 0px; right: 0px; "+
+//                "top: 0px; bottom: 0px;");
+//		layoutforcenteringpanel.addComponent(borders);
+//		layoutforcenteringpanel.setComponentAlignment(borders, Alignment.TOP_CENTER);
+		smallStripLayout.addComponent(borders,"left: 40%; right: 40%; top: 0px; bottom: 0px;");
+		
+		test.addComponent(smallStrip.getComponent());
+		test.addComponent(borders);
+		test.addStyleName("cssLayout");
+		
+//		return smallStripLayout;
+		return test;
+	}
+
+	//listeners for the bigStrip
 	private void initBigStripListener() {
 		bigStrip.setListener(new Property.ValueChangeListener() {
             public void valueChange(ValueChangeEvent event) {
