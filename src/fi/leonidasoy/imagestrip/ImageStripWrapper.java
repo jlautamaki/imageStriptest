@@ -2,12 +2,14 @@ package fi.leonidasoy.imagestrip;
 
 import java.util.ArrayList;
 
+import org.vaadin.cssinject.CSSInject;
 import org.vaadin.peter.imagestrip.ImageStrip;
 import org.vaadin.peter.imagestrip.ImageStrip.Image;
 
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.UI;
 
 public class ImageStripWrapper {
 
@@ -23,8 +25,10 @@ public class ImageStripWrapper {
 	private ValueChangeListener listener = null;
 	final private MyImage[] images;
 	private ArrayList<ImageStrip.Image> imagesAddedToStrip = new ArrayList<ImageStrip.Image>();
+	final private String styleName;
 	
-	public ImageStripWrapper(MyImage[] images, int imgSize, int numberOfImages, int offset, boolean cropImages) {
+	public ImageStripWrapper(String styleName, MyImage[] images, int imgSize, int numberOfImages, int offset, boolean cropImages) {
+		this.styleName = styleName;
 		this.images=images;
 		this.offset = offset;
 		this.cropImages = cropImages;
@@ -36,6 +40,7 @@ public class ImageStripWrapper {
 	public void reCreateStrip() {
 	     // Create new horizontally aligned strip of images
        ImageStrip striptmp = new ImageStrip();
+       striptmp.setStyleName(this.styleName);
        
        // Use animation
        striptmp.setAnimated(true);
@@ -97,7 +102,6 @@ public class ImageStripWrapper {
 	
 	void setMiddleSelected() {
 		strip.removeValueChangeListener(listener);			
-		//int value = (this.offset+urls.length/2)%urls.length;
 		int value = (this.offset+getMiddleOffset())%images.length;
 		strip.setValue(this.imagesAddedToStrip.get(value));
 		if (listener!=null){
@@ -115,31 +119,47 @@ public class ImageStripWrapper {
 	}
 
 
-	public void scrollToLeft(int i) {
-		//i=1;
-		offset=(offset+i)%images.length;
-		strip.scrollToLeft();
-		setMiddleSelected();
+	public void scrollToLeft(int i, UI ui) {
+		System.out.println("Scrolling left " +i + " times.");
+		while(i>0){
+			offset++;
+			offset=offset%images.length;
+			strip.scrollToLeft();
+			setMiddleSelected();
+			i--;
+		}
+		fixCss(ui);
 	}
 
 
-	public void scrollToRight(int i) {
-		//i=1;
-		offset--;
-		if (offset<0){
-			offset+=images.length;
+	private void fixCss(UI ui) {
+		// should be width: 810px; height: 140px; top: 0px; left: 182px;	
+		CSSInject css = new CSSInject(ui);
+		css.setStyles(".v-strip .selectable {width: 810px !important; left: 182px !important;}");
+	}
+
+	public void scrollToRight(int i, UI ui) {
+		System.out.println("Scrolling right " +i + " times.");
+		while(i>0){
+			offset--;
+			if (offset<0){
+				offset+=images.length;
+			}
+			strip.scrollToRight();
+			setMiddleSelected();
+			i--;
 		}
-		strip.scrollToRight();
-		setMiddleSelected();
+		fixCss(ui);
 	}
 
 	
 	public int offsetComparedToMiddle(int clickedindex) {
-		int middleOffset = getMiddleOffset();
 		int value = clickedindex-offset;
 		if (value < 0){
 			value+=images.length;
 		}
+		//Component indexes from right, but we would like to compare to middle element 
+		int middleOffset = getMiddleOffset();
 		value-=middleOffset;
 		return value;
 	}

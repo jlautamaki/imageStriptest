@@ -109,8 +109,8 @@ public class ImagestriptestUI extends UI {
 	final private static int imgSize=140;
 
 	//imagestripdata
-	final private ImageStripWrapper smallStrip = new ImageStripWrapper(MyImage.getImages(), imgSize,5,0,true);
-	final private ImageStripWrapper bigStrip = new ImageStripWrapper(MyImage.getImages(), imgSize*4,1,2,false);
+	final private ImageStripWrapper smallStrip = new ImageStripWrapper("smallstrip", MyImage.getImages(), imgSize,5,0,true);
+	final private ImageStripWrapper bigStrip = new ImageStripWrapper("bigstrip", MyImage.getImages(), imgSize*4,1,2,false);
 	
 	private GridLayout gridLayout;
 	private Label imgMetaDataLabel;
@@ -125,7 +125,8 @@ public class ImagestriptestUI extends UI {
 	private void injectCssStyles() {
 		CSSInject css = new CSSInject(getUI());
 		css.setStyles(".mainWindow {background-color: #000000;} "
-	//			+ ".cssLayout {background-color: #0f0f0f;} "
+				+ ".bigstrip .v-strip {width: 590px !important; left: 292px !important;}" //fixes problem with imagestrip component
+				+ ".smallstrip .v-strip {width: 810px !important; left: 182px !important;}" //fixes problem with imagestrip component
 				+ ".imageBorder {border: 2px dashed rgb(0,234,80); margin-left: -77px !important;}"
 				+ ".reindeer .v-panel-content, .reindeer .white .v-panel-content {border: 0px solid rgba(0,0,0,0)}"
 				+ ".v-imagestrip {background-color: rgba(0,0,0,0);}"
@@ -276,9 +277,9 @@ public class ImagestriptestUI extends UI {
         		int clickedindex = value.getImageIndex();
         		int moveToLeft = smallStrip.offsetComparedToMiddle(clickedindex);
         		if (moveToLeft>0){
-        			scrollToRight(Math.abs(moveToLeft));
+        			scrollToRight(moveToLeft);
         		}else if (moveToLeft<0){
-        			scrollToLeft(moveToLeft);
+        			scrollToLeft(Math.abs(moveToLeft));
         		}
             }
         });
@@ -286,15 +287,17 @@ public class ImagestriptestUI extends UI {
 
 	//scrolls both strips and updates other fields
 	protected void scrollToRight(int i) {
-		smallStrip.scrollToLeft(i);
-		bigStrip.scrollToLeft(i);
+		UI ui = getUI();
+		smallStrip.scrollToLeft(i, ui);
+		bigStrip.scrollToLeft(i, ui);
 		this.imgMetaDataLabel.setValue(getImgMetaDataLabelText(bigStrip.getIndex()));
 	}
 
 	//scrolls both strips and updates other fields
 	protected void scrollToLeft(int i) {
-		smallStrip.scrollToRight(i);
-		bigStrip.scrollToRight(i);
+		UI ui = getUI();
+		smallStrip.scrollToRight(i, ui);
+		bigStrip.scrollToRight(i, ui);
 		this.imgMetaDataLabel.setValue(getImgMetaDataLabelText(bigStrip.getIndex()));
 	}
 
