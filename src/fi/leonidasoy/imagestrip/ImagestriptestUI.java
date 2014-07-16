@@ -2,6 +2,7 @@ package fi.leonidasoy.imagestrip;
 
 import javax.servlet.annotation.WebServlet;
 
+import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.VaadinServletConfiguration;
 
@@ -10,6 +11,8 @@ import org.vaadin.peter.imagestrip.ImageStrip;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -18,6 +21,7 @@ import com.vaadin.event.MouseEvents.ClickListener;
 import com.vaadin.server.FileResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
+import com.vaadin.shared.communication.PushMode;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbsoluteLayout;
 import com.vaadin.ui.Alignment;
@@ -33,7 +37,7 @@ import com.vaadin.ui.VerticalLayout;
 
 @SuppressWarnings("serial")
 @Theme("mobiletheme")
-//@Theme("imagestriptest")
+@Push(PushMode.MANUAL) 
 public class ImagestriptestUI extends UI {
 
 	@WebServlet(value = "/*", asyncSupported = true)
@@ -109,26 +113,66 @@ public class ImagestriptestUI extends UI {
 	final private static int imgSize=140;
 
 	//imagestripdata
-	final private ImageStripWrapper smallStrip = new ImageStripWrapper("smallstrip", MyImage.getImages(), imgSize,5,0,true);
-	final private ImageStripWrapper bigStrip = new ImageStripWrapper("bigstrip", MyImage.getImages(), imgSize*4,1,2,false);
+	private ImageStripWrapper smallStrip; 
+	private ImageStripWrapper bigStrip;
 	
 	private GridLayout gridLayout;
 	private Label imgMetaDataLabel;
+	private int bigStripHeight = 0;
 	
 	@Override
 	protected void init(VaadinRequest request) {
-		injectCssStyles();		
-		this.setStyleName("mainWindow");		
-		setContent(createMainLayout());
+		getbigStripHeight();
+		new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+            	initUI();
+            }
+        }, 500);		
 	}
 	
+	private void initUI(){
+		setContent(new Label("getting image urls from dropbox"));	            	
+		getUI().push();		
+		MyImage[] images = MyImage.getImages();
+		setContent(new Label("initializing smallStrip"));	            	
+		getUI().push();		
+		smallStrip = new ImageStripWrapper("smallstrip", images, imgSize,5,0,true);
+		setContent(new Label("initializing bigStrip"));	            	
+		getUI().push();		
+		bigStrip = new ImageStripWrapper("bigstrip", images, getbigStripHeight(),1,2,false);
+		injectCssStyles();
+		this.setStyleName("mainWindow");		
+		this.setImmediate(true);
+		setContent(new Label("creating main layout"));	            	
+		getUI().push();		
+		setContent(createMainLayout());	            	
+		getUI().push();		
+	}
+	
+	private int getbigStripHeight() {
+		if (this.bigStripHeight==0){
+			bigStripHeight=getUI().getPage().getBrowserWindowHeight()-imgSize;
+			//we do not want the pictures to be to small :)
+			if (bigStripHeight<2*imgSize){
+				bigStripHeight=2*imgSize;
+			}
+			//floored to nearest hungred (just to save size as the scaled and cropped images are stored to filesystem :)
+			bigStripHeight=(bigStripHeight/100)*100;
+			System.out.println("bigstripHeight = " + bigStripHeight);
+		}
+		return bigStripHeight;
+	}
+
 	private void injectCssStyles() {
 		CSSInject css = new CSSInject(getUI());
 		css.setStyles(".mainWindow {background-color: #000000;} "
-				+ ".bigstrip .v-strip {position: absolute; width: 590px !important; left:50% !important; margin-left: -270px !important;}" //fixes problem with imagestrip component
-				+ ".smallstrip .v-strip {position: absolute; width: 810px !important; left:50% !important; margin-left: -405px !important;}" //fixes problem with imagestrip component
-				+ ".imageBorder {border: 2px dashed rgb(0,234,80); position: absolute; left:50% !important; margin-left: -75px !important;}"
-				+ ".reindeer .v-panel-content, .reindeer .white .v-panel-content {border: 0px solid rgba(0,0,0,0)}"
+				//centers component and fixes some bugs in component
+				//+ ".bigstrip .v-strip {position: absolute !important; width: 590px !important; left:50% !important; margin-left: -270px !important;}" 
+				//centers component and fixes some bugs in component
+				//+ ".smallstrip .v-strip {position: absolute !important; width: 810px !important; left:50% !important; margin-left: -405px !important;}"
+				//centers imageborder and draws dashed line around it
+				+ ".imageBorder {border: 2px dashed rgb(0,234,80); position: absolute !important; top:0px !important; left:50% !important; margin-left: -75px !important;}"
 				+ ".v-imagestrip {background-color: rgba(0,0,0,0);}"
 				+ ".v-imagestrip .image-border {border-radius: 0px; background-color: rgba(0,0,0,0);}"
 				+ ".v-imagestrip .strip-horizontal-scroller {width: 0px; height 0px;}"
@@ -168,7 +212,7 @@ public class ImagestriptestUI extends UI {
         scrollRight.addClickListener(new ClickListener() {
 			@Override
 			public void click(ClickEvent event) {
-				scrollToRight(1);
+				scrollToRight();
 			}});
 				
 		Image scrollLeft = MyUtil.getImage(button);
@@ -176,7 +220,7 @@ public class ImagestriptestUI extends UI {
         scrollLeft.addClickListener(new ClickListener() {
 			@Override
 			public void click(ClickEvent event) {
-				scrollToLeft(1);
+				scrollToLeft();
 			}});
 		
         gridLayout.addComponent(image, 0, 0);
@@ -261,28 +305,47 @@ public class ImagestriptestUI extends UI {
         		ImageStrip.Image value = (ImageStrip.Image) event.getProperty().getValue();
         		int clickedindex = value.getImageIndex();
         		int moveToLeft = smallStrip.offsetComparedToMiddle(clickedindex);
+        		//should be between -2 and 2
+        		assert Math.abs(moveToLeft)<=2;
+        		
         		if (moveToLeft>0){
-        			scrollToRight(moveToLeft);
+        			scrollToRight();
+        			if (moveToLeft==2){
+	        			new Timer().schedule(new TimerTask() {
+	        	            @Override
+	        	            public void run() {
+	        	            	scrollToRight();
+	        	        		getUI().push();
+	        	            }
+	        	        }, 500);
+        			}
         		}else if (moveToLeft<0){
-        			scrollToLeft(Math.abs(moveToLeft));
+        			scrollToLeft();
+        			if (moveToLeft==-2){
+	        			new Timer().schedule(new TimerTask() {
+	        	            @Override
+	        	            public void run() {
+	        	            	scrollToLeft();
+	        	        		getUI().push();
+	        	            }
+	        	        }, 500);
+        			}
         		}
             }
         });
 	}
 
 	//scrolls both strips and updates other fields
-	protected void scrollToRight(int i) {
-		UI ui = getUI();
-		smallStrip.scrollToLeft(i, ui);
-		bigStrip.scrollToLeft(i, ui);
+	protected void scrollToRight() {
+		smallStrip.scrollToLeft();
+		bigStrip.scrollToLeft();
 		this.imgMetaDataLabel.setValue(getImgMetaDataLabelText(bigStrip.getIndex()));
 	}
 
 	//scrolls both strips and updates other fields
-	protected void scrollToLeft(int i) {
-		UI ui = getUI();
-		smallStrip.scrollToRight(i, ui);
-		bigStrip.scrollToRight(i, ui);
+	protected void scrollToLeft() {
+		smallStrip.scrollToRight();
+		bigStrip.scrollToRight();
 		this.imgMetaDataLabel.setValue(getImgMetaDataLabelText(bigStrip.getIndex()));
 	}
 

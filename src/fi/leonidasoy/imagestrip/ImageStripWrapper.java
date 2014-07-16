@@ -2,14 +2,12 @@ package fi.leonidasoy.imagestrip;
 
 import java.util.ArrayList;
 
-import org.vaadin.cssinject.CSSInject;
 import org.vaadin.peter.imagestrip.ImageStrip;
 import org.vaadin.peter.imagestrip.ImageStrip.Image;
 
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.UI;
 
 public class ImageStripWrapper {
 
@@ -67,7 +65,7 @@ public class ImageStripWrapper {
         	striptmp = addImage(striptmp, img,this.cropImages,this.imgSize);        	
         }
 
-       striptmp.setImmediate(true);
+       //striptmp.setImmediate(false);
        striptmp.setSelectable(true);
        if (this.listener!=null){
    			strip.addValueChangeListener(listener);			
@@ -119,31 +117,17 @@ public class ImageStripWrapper {
 		return this.numberOfImages/2;
 	}
 
-
-	public void scrollToLeft(int i, UI ui) {
-		System.out.println("Scrolling left " +i + " times.");
-		while(i>0){
-			offset++;
-			offset=offset%images.length;
-			strip.scrollToLeft();
-			setMiddleSelected();
-			i--;
-		}
+	public void scrollToLeft(){
+		strip.scrollToLeft();
+		offset=(offset+1)%images.length;
+		setMiddleSelected();
 	}
-
-	public void scrollToRight(int i, UI ui) {
-		System.out.println("Scrolling right " +i + " times.");
-		while(i>0){
-			offset--;
-			if (offset<0){
-				offset+=images.length;
-			}
-			strip.scrollToRight();
-			setMiddleSelected();
-			i--;
-		}
+	
+	public void scrollToRight() {
+		strip.scrollToRight();
+		offset=(offset-1+images.length)%images.length;
+		setMiddleSelected();
 	}
-
 	
 	public int offsetComparedToMiddle(int clickedindex) {
 		int value = clickedindex-offset;

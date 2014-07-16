@@ -20,12 +20,12 @@ public class MyImage {
         return FilenameUtils.getName(url.getFile());		
 	}
 
-	private String getCroppedFilename(){
-        return "croppedimage"+getFilename();		
+	private String getCroppedFilename(int height){
+        return "croppedimage"+height+getFilename();		
 	}
 
-	private String getScaledFilename(){
-        return "scaledimage"+getFilename();		
+	private String getScaledFilename(int height){
+        return "scaledimage"+height+getFilename();		
 	}
 	
 	public MyImage(URL url) {
@@ -46,11 +46,11 @@ public class MyImage {
 	}
 	
 	public FileResource getCroppedFileResource(int imgSize) {
-        return MyUtil.cropAndResizeFile(getFileResource(),getCroppedFilename(),imgSize,true);
+        return MyUtil.cropAndResizeFile(getFileResource(),getCroppedFilename(imgSize),imgSize,true);
 	}
 
 	public FileResource getScaledFileResource(int imgSize) {
-        return MyUtil.cropAndResizeFile(this.getFileResource(),getScaledFilename(),imgSize,false);
+        return MyUtil.cropAndResizeFile(this.getFileResource(),getScaledFilename(imgSize),imgSize,false);
 	}
 	
 	public static MyImage[] getImages() {
