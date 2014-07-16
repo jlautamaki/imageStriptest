@@ -31,6 +31,7 @@ import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
@@ -132,19 +133,43 @@ public class ImagestriptestUI extends UI {
 	}
 	
 	private void initUI(){
-		setContent(new Label("getting image urls from dropbox"));	            	
-		getUI().push();		
-		MyImage[] images = MyImage.getImages();
-		setContent(new Label("initializing smallStrip"));	            	
-		getUI().push();		
-		smallStrip = new ImageStripWrapper("smallstrip", images, imgSize,5,0,true);
-		setContent(new Label("initializing bigStrip"));	            	
-		getUI().push();		
-		bigStrip = new ImageStripWrapper("bigstrip", images, getbigStripHeight(),1,2,false);
+		//styles etc.
 		injectCssStyles();
 		this.setStyleName("mainWindow");		
 		this.setImmediate(true);
-		setContent(new Label("creating main layout"));	            	
+
+		//progress indicator to show progress of imageloads
+		CssLayout layout = new CssLayout();
+		layout.setSizeFull();
+
+		ProgressBar bar = new ProgressBar(0.25f);
+		bar.setStyleName("progressBar");
+		bar.setWidth("300px");
+		bar.setHeight("20px");
+
+		Label label = new Label();
+		label.setStyleName("progressLabel");
+		label.setContentMode(ContentMode.HTML);
+		label.setWidth("300px");
+		label.setValue("<center>Refreshing image database.</center>");
+
+		layout.addComponent(bar);
+		layout.addComponent(label);
+		setContent(layout);
+		getUI().push();		
+		
+		//start actual initialization of app
+		MyImage[] images = MyImage.getImages();
+		bar.setValue(0.5f);
+		label.setValue("<center>Downloading images.</center>");	            	
+		getUI().push();		
+		smallStrip = new ImageStripWrapper("smallstrip", images, imgSize,5,0,true);
+		bar.setValue(0.75f);
+		label.setValue("<center>Scaling and cropping images.</center>");	            	
+		getUI().push();		
+		bigStrip = new ImageStripWrapper("bigstrip", images, getbigStripHeight(),1,2,false);
+		bar.setValue(0.95f);
+		label.setValue("<center>Initializing main layout.</center>");	            	
 		getUI().push();		
 		setContent(createMainLayout());	            	
 		getUI().push();		
@@ -166,13 +191,14 @@ public class ImagestriptestUI extends UI {
 
 	private void injectCssStyles() {
 		CSSInject css = new CSSInject(getUI());
-		css.setStyles(".mainWindow {background-color: #000000;} "
-				//centers component and fixes some bugs in component
-				//+ ".bigstrip .v-strip {position: absolute !important; width: 590px !important; left:50% !important; margin-left: -270px !important;}" 
-				//centers component and fixes some bugs in component
-				//+ ".smallstrip .v-strip {position: absolute !important; width: 810px !important; left:50% !important; margin-left: -405px !important;}"
+		css.setStyles(""
+				//centers imageborder and draws dashed line around it
+				+ ".progressBar {position: absolute !important; top:50% !important; left:50% !important; margin-left: -150px !important; margin-top: -20px !important;}"
+				//positions progressbar and label
+				+ ".progressLabel {position: absolute !important; top:50% !important; left:50% !important; margin-left: -150px !important;}"
 				//centers imageborder and draws dashed line around it
 				+ ".imageBorder {border: 2px dashed rgb(0,234,80); position: absolute !important; top:0px !important; left:50% !important; margin-left: -75px !important;}"
+				+ ".mainWindow {background-color: #000000;} "
 				+ ".v-imagestrip {background-color: rgba(0,0,0,0);}"
 				+ ".v-imagestrip .image-border {border-radius: 0px; background-color: rgba(0,0,0,0);}"
 				+ ".v-imagestrip .strip-horizontal-scroller {width: 0px; height 0px;}"
