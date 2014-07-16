@@ -67,6 +67,7 @@ public class ImageStripWrapper {
         	striptmp = addImage(striptmp, img,this.cropImages,this.imgSize);        	
         }
 
+       striptmp.setImmediate(true);
        striptmp.setSelectable(true);
        if (this.listener!=null){
    			strip.addValueChangeListener(listener);			
@@ -128,14 +129,6 @@ public class ImageStripWrapper {
 			setMiddleSelected();
 			i--;
 		}
-		fixCss(ui);
-	}
-
-
-	private void fixCss(UI ui) {
-		// should be width: 810px; height: 140px; top: 0px; left: 182px;	
-		CSSInject css = new CSSInject(ui);
-		css.setStyles(".v-strip .selectable {width: 810px !important; left: 182px !important;}");
 	}
 
 	public void scrollToRight(int i, UI ui) {
@@ -149,7 +142,6 @@ public class ImageStripWrapper {
 			setMiddleSelected();
 			i--;
 		}
-		fixCss(ui);
 	}
 
 	
