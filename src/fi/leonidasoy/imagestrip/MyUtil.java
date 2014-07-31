@@ -65,7 +65,7 @@ public class MyUtil {
 		        int newWidth = (int) Math.ceil(in.getWidth()*scaleValue);
 		        int newHeight = (int) Math.ceil(in.getHeight()*scaleValue);
 		        
-		        BufferedImage imgout = Scalr.resize(in, Scalr.Method.QUALITY, Scalr.Mode.AUTOMATIC,
+		        BufferedImage imgout = Scalr.resize(in, Scalr.Method.ULTRA_QUALITY, Scalr.Mode.AUTOMATIC,
 		        		newWidth, newHeight, Scalr.OP_ANTIALIAS);        
 
 		        RenderedImage imgout2;

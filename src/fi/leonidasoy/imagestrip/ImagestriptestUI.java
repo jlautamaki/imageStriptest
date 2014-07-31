@@ -1,26 +1,41 @@
 package fi.leonidasoy.imagestrip;
 
+//annotations
 import javax.servlet.annotation.WebServlet;
 
+import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.VaadinServletConfiguration;
+import com.vaadin.addon.touchkit.server.TouchKitServlet;
+import com.vaadin.addon.touchkit.ui.NavigationManager;
 
+
+
+
+//addons
 import org.vaadin.cssinject.CSSInject;
 import org.vaadin.peter.imagestrip.ImageStrip;
 
+
+
+
+//java
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Timer;
 import java.util.TimerTask;
 
+
+
+
+//vaadin
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.event.MouseEvents.ClickEvent;
 import com.vaadin.event.MouseEvents.ClickListener;
 import com.vaadin.server.FileResource;
 import com.vaadin.server.VaadinRequest;
-import com.vaadin.server.VaadinServlet;
 import com.vaadin.shared.communication.PushMode;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbsoluteLayout;
@@ -30,31 +45,33 @@ import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Layout;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-
+@PreserveOnRefresh
 @SuppressWarnings("serial")
-@Theme("mobiletheme")
-@Push(PushMode.MANUAL) 
+@Push(PushMode.AUTOMATIC) 
+//@Theme("mobiletheme")
 public class ImagestriptestUI extends UI {
 
 	@WebServlet(value = "/*", asyncSupported = true)
 	@VaadinServletConfiguration(productionMode = false, ui = ImagestriptestUI.class, widgetset = "fi.leonidasoy.imagestrip.widgetset.ImagestriptestWidgetset")
-	public static class Servlet extends VaadinServlet {
+	//@VaadinServletConfiguration(productionMode = false, ui = ImagestriptestUI.class, widgetset = "com.vaadin.addon.touchkit.gwt.TouchKitWidgetSet")
+	public static class Servlet extends TouchKitServlet {
 	}
-
-/*	@PreserveOnRefresh
-	@SuppressWarnings("serial")
-	@Theme("mobiletheme")
-	@Widgetset("com.arvue.apps.imagestriptest.gwt.AppWidgetSet")
-	//@Widgetset("com.vaadin.addon.touchkit.gwt.TouchKitWidgetSet")
-	public class App extends UI{
-*/
 	
 	/*
+	javax.servlet
+	<dependency>
+		<groupId>javax.servlet</groupId>
+		<artifactId>javax.servlet-api</artifactId>
+		<version>3.0.1</version>
+	</dependency>  
+	 
+	 <dependency org="javax.servlet" name="javax.servlet-api" rev="3.0.1"/>
+	 
 	imagestrip
 	<dependency>
    		<groupId>org.vaadin.addons</groupId>
@@ -120,64 +137,73 @@ public class ImagestriptestUI extends UI {
 	private GridLayout gridLayout;
 	private Label imgMetaDataLabel;
 	private int bigStripHeight = 0;
+	private ProgressBarLayout progressBar;
 	
 	@Override
 	protected void init(VaadinRequest request) {
-		getbigStripHeight();
-		new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-            	initUI();
-            }
-        }, 500);		
-	}
-	
-	private void initUI(){
+		UI ui = getUI();
+		getbigStripHeight(ui);
 		//styles etc.
-		injectCssStyles();
+		injectCssStyles(getUI());
 		this.setStyleName("mainWindow");		
 		this.setImmediate(true);
-
 		//progress indicator to show progress of imageloads
-		CssLayout layout = new CssLayout();
-		layout.setSizeFull();
+		progressBar = new ProgressBarLayout(ui);
+		progressBar.setValue("Downloading imagelist.", 0.25f);
+		ui.setContent(progressBar);
 
-		ProgressBar bar = new ProgressBar(0.25f);
-		bar.setStyleName("progressBar");
-		bar.setWidth("300px");
-		bar.setHeight("20px");
-
-		Label label = new Label();
-		label.setStyleName("progressLabel");
-		label.setContentMode(ContentMode.HTML);
-		label.setWidth("300px");
-		label.setValue("<center>Refreshing image database.</center>");
-
-		layout.addComponent(bar);
-		layout.addComponent(label);
-		setContent(layout);
-		getUI().push();		
-		
-		//start actual initialization of app
-		MyImage[] images = MyImage.getImages();
-		bar.setValue(0.5f);
-		label.setValue("<center>Downloading images.</center>");	            	
-		getUI().push();		
-		smallStrip = new ImageStripWrapper("smallstrip", images, imgSize,5,0,true);
-		bar.setValue(0.75f);
-		label.setValue("<center>Scaling and cropping images.</center>");	            	
-		getUI().push();		
-		bigStrip = new ImageStripWrapper("bigstrip", images, getbigStripHeight(),1,2,false);
-		bar.setValue(0.95f);
-		label.setValue("<center>Initializing main layout.</center>");	            	
-		getUI().push();		
-		setContent(createMainLayout());	            	
-		getUI().push();		
+		//UI is initialized in another thread as it takes some time
+		//while initializing websockets are used for updating progressbar
+		new InitializerThread().start();
 	}
 	
-	private int getbigStripHeight() {
+	   class InitializerThread extends Thread {	        
+           private MyImage[] images;
+	        @Override
+	        public void run() {
+        		//get imagelist
+	        	access(new Runnable() {
+
+					@Override
+                    public void run() {
+                		images = MyImage.getImages(progressBar, getUI());
+                    }
+                });
+	    		//download, scale and crop images
+	        	access(new Runnable() {
+                    @Override
+                    public void run() {
+                		progressBar.setValue("Downloading images.",0.5f);
+                		smallStrip = new ImageStripWrapper("smallstrip", images, imgSize,5,0,true,progressBar);
+                    }
+                });
+	    		//download, scale and crop images
+	        	access(new Runnable() {
+                    @Override
+                    public void run() {
+                		progressBar.setValue("Scaling and cropping images.",0.75f);
+                		bigStrip = new ImageStripWrapper("bigstrip", images, getbigStripHeight(getUI()),1,2,false,progressBar);
+                    }
+                });
+	    		//start actual initialization of app
+	        	access(new Runnable() {
+                    @Override
+                    public void run() {
+                		progressBar.setValue("Initializing main layout.",0.95f);
+                		System.out.println ("1");
+                		Layout layout = createMainLayout();
+                		System.out.println ("2");
+                		progressBar.setValue("Ready.",0.99f);
+                		System.out.println (layout);
+                		setContent(layout);	            	
+                    }
+                });
+	        }
+	   }
+	
+	private int getbigStripHeight(UI ui) {
 		if (this.bigStripHeight==0){
-			bigStripHeight=getUI().getPage().getBrowserWindowHeight()-imgSize;
+			bigStripHeight=ui.getPage().getBrowserWindowHeight()-imgSize;
 			//we do not want the pictures to be to small :)
 			if (bigStripHeight<2*imgSize){
 				bigStripHeight=2*imgSize;
@@ -189,16 +215,19 @@ public class ImagestriptestUI extends UI {
 		return bigStripHeight;
 	}
 
-	private void injectCssStyles() {
-		CSSInject css = new CSSInject(getUI());
+	private void injectCssStyles(UI ui) {
+		CSSInject css = new CSSInject(ui);
 		css.setStyles(""
 				//centers imageborder and draws dashed line around it
 				+ ".progressBar {position: absolute !important; top:50% !important; left:50% !important; margin-left: -150px !important; margin-top: -20px !important;}"
 				//positions progressbar and label
 				+ ".progressLabel {position: absolute !important; top:50% !important; left:50% !important; margin-left: -150px !important;}"
 				//centers imageborder and draws dashed line around it
-				+ ".imageBorder {border: 2px dashed rgb(0,234,80); position: absolute !important; top:0px !important; left:50% !important; margin-left: -75px !important;}"
+				+ ".imageBorder {border: 2px dashed rgb(0,234,80); background-color: rgba(0,0,0,0); position: absolute !important; top:0px !important; left:50% !important; margin-left: -75px !important;}"
+				+ ".fullScreenLayout {vertical-align: middle; text-align: center !important;}"
+				+ ".fullScreenImage {max-width: 98%; max-height: 94%; margin: 0; padding: 0; border: 0;}"				
 				+ ".mainWindow {background-color: #000000;} "
+				+ ".reindeer .v-panel-content {border: 0px rgba(0,0,0,0); background-color: rgba(0,0,0,0);}"
 				+ ".v-imagestrip {background-color: rgba(0,0,0,0);}"
 				+ ".v-imagestrip .image-border {border-radius: 0px; background-color: rgba(0,0,0,0);}"
 				+ ".v-imagestrip .strip-horizontal-scroller {width: 0px; height 0px;}"
@@ -207,8 +236,6 @@ public class ImagestriptestUI extends UI {
 	}
     
     private GridLayout createMainLayout(){
-    	bigStrip.reCreateStrip();
-    	smallStrip.reCreateStrip();
     	gridLayout = new GridLayout();
 		final VerticalLayout sourceLayout = new VerticalLayout();
 		sourceLayout.setWidth("100px");
@@ -251,10 +278,11 @@ public class ImagestriptestUI extends UI {
 		
         gridLayout.addComponent(image, 0, 0);
         gridLayout.addComponent(bigStripLayout, 1, 0);
+		//gridLayout.addComponent(new SwipeViewTestMgr(),2,0);
+
 		gridLayout.addComponent(scrollRight,0, 1);
-		gridLayout.addComponent(scrollLeft,2, 1);
 		gridLayout.addComponent(createSmallStripLayout(), 1, 1);
-			
+		gridLayout.addComponent(scrollLeft,2, 1);
 		gridLayout.setComponentAlignment(scrollRight, Alignment.MIDDLE_CENTER);
 		gridLayout.setComponentAlignment(scrollLeft, Alignment.MIDDLE_CENTER);
 		
@@ -282,36 +310,19 @@ public class ImagestriptestUI extends UI {
 		final int borderwidthint = (int) (smallStrip.getHeight() + 10);
 		final String borderwidth =  borderwidthint + "" + smallStrip.getHeightUnits();
 		
-		final CssLayout test = new CssLayout();
-		test.setHeight(height);
-		test.setWidth("100%");
-				
-    	//absolutelayout for layouting components in z-order
-    	//final AbsoluteLayout smallStripLayout = new AbsoluteLayout();
-		//smallStripLayout.setHeight(height);
-		//smallStripLayout.setWidth("100%");
-		
-    	//strip that shows images
-		//smallStripLayout.addComponent(smallStrip.getComponent(), "left: 50% !important");
-		
+		final CssLayout smallstriplayout = new CssLayout();
+		smallstriplayout.setHeight(height);
+		smallstriplayout.setWidth("100%");
+						
 		//components that shows border around middle image and some layouting
 		Panel borders = new Panel();
 		borders.addStyleName("imageBorder");
 		borders.setWidth(borderwidth);
 		borders.setHeight(height);
-		//VerticalLayout layoutforcenteringpanel = new VerticalLayout();
-		//layoutforcenteringpanel.addComponent(borders);
-		//smallStripLayout.addComponent(layoutforcenteringpanel,"left: 50%;");
-		//layoutforcenteringpanel.addComponent(borders);
-		//layoutforcenteringpanel.setComponentAlignment(borders, Alignment.TOP_CENTER);
-//		smallStripLayout.addComponent(borders,"left: 40%; right: 40%; top: 0px; bottom: 0px;");
 		
-		test.addComponent(smallStrip.getComponent());
-		test.addComponent(borders);
-		test.addStyleName("cssLayout");
-		
-//		return smallStripLayout;
-		return test;
+		smallstriplayout.addComponent(smallStrip.getComponent());
+		smallstriplayout.addComponent(borders);		
+		return smallstriplayout;
 	}
 
 	//listeners for the bigStrip
@@ -386,21 +397,40 @@ public class ImagestriptestUI extends UI {
 		URL url = selectedImage.getUrl();
 		FileResource res = selectedImage.getFileResource();
 		Image image = new Image(url.getFile(),res);
-		image.setWidth("100%");
 		image.addClickListener(new ClickListener() {
 			@Override
 			public void click(ClickEvent event) {
 				closeFullscreenView();
 			}
         });
-		VerticalLayout fullscreenlayout = new VerticalLayout();
-		fullscreenlayout.addComponent(image);			
-		fullscreenlayout.setWidth("100%");
-		this.setContent(fullscreenlayout);
+		CssLayout layout = new CssLayout();
+		layout.setSizeFull();		
+		image.setStyleName("fullScreenImage");
+		layout.setStyleName("fullScreenLayout");
+		layout.addComponent(image);			
+		this.setContent(layout);			
 	}
 
 	//closes fullscreen imageviewer
 	protected void closeFullscreenView() {
 		setContent(gridLayout);
 	}
+	
+//	public static class SwipeViewTestMgr extends NavigationManager {
+
+//        public SwipeViewTestMgr() {
+
+//           setCurrentComponent(new Label("currentcomponent!!!!"));
+
+//            addNavigationListener(new NavigationListener() {
+//                public void navigate(NavigationEvent event) {
+//                    if (event.getDirection() == Direction.FORWARD) {
+//                    	System.out.println("to right");
+//                    } else {
+//                    	System.out.println("to left");
+//                    }
+//                }
+//            });
+//        }
+//	}
 }

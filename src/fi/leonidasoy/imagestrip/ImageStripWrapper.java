@@ -25,17 +25,17 @@ public class ImageStripWrapper {
 	private ArrayList<ImageStrip.Image> imagesAddedToStrip = new ArrayList<ImageStrip.Image>();
 	final private String styleName;
 	
-	public ImageStripWrapper(String styleName, MyImage[] images, int imgSize, int numberOfImages, int offset, boolean cropImages) {
+	public ImageStripWrapper(String styleName, MyImage[] images, int imgSize, int numberOfImages, int offset, boolean cropImages, ProgressBarLayout progressBar) {
 		this.styleName = styleName;
 		this.images=images;
 		this.offset = offset;
 		this.cropImages = cropImages;
 		this.imgSize = imgSize;
 		this.numberOfImages = numberOfImages;
-		reCreateStrip();
+		initStrip(progressBar);
 	}
 	
-	public void reCreateStrip() {
+	private void initStrip(ProgressBarLayout progressBar) {
 	     // Create new horizontally aligned strip of images
        ImageStrip striptmp = new ImageStrip();
        striptmp.setStyleName(this.styleName);
@@ -60,9 +60,11 @@ public class ImageStripWrapper {
        striptmp.setMaxAllowed(this.numberOfImages);        	
 	   
        this.imagesAddedToStrip.clear();
+       progressBar.startJob(images.length);
         for(int i=0; i<this.images.length; i++){
         	MyImage img = images[calculateUrlIndex(i)];
         	striptmp = addImage(striptmp, img,this.cropImages,this.imgSize);        	
+        	progressBar.doJobIncrediment();
         }
 
        //striptmp.setImmediate(false);

@@ -1,20 +1,28 @@
 package fi.leonidasoy.imagestrip;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+
+import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FilenameUtils;
 
 import com.dropbox.core.DbxClient;
 import com.dropbox.core.DbxException;
 import com.vaadin.server.FileResource;
+import com.vaadin.ui.UI;
 
 public class MyImage {
 	private static MyImage[] images;
 	private FileResource fullSizedFile=null;
 	private String metadataString=null;
 	private final URL url;
+	private int width = -1;
+	private int height = -1;
 
 	private String getFilename(){		
         return FilenameUtils.getName(url.getFile());		
@@ -53,20 +61,23 @@ public class MyImage {
         return MyUtil.cropAndResizeFile(this.getFileResource(),getScaledFilename(imgSize),imgSize,false);
 	}
 	
-	public static MyImage[] getImages() {
+	public static MyImage[] getImages(ProgressBarLayout progressBar, UI ui) {
 		if (images==null){
-			images = getImagesFromDropbox();	
+			images = getImagesFromDropbox(progressBar, ui);	
 		}
 		return images;
 	}
 	
-	private static MyImage[] getImagesFromDropbox() {
+	private static MyImage[] getImagesFromDropbox(ProgressBarLayout progressBar, UI ui) {
         DbxClient client = DropboxService.getClient();
         ArrayList<MyImage> list = new ArrayList<MyImage>();
         DropboxAlbum album;
 		try {
 			album = new DropboxAlbum(client, "/Jari's photos");
-	        for (Picture picture : album.getPictures()) {
+			progressBar.setValue("Found " +album.getPictures().size() + "pictures.",0.4f);
+			ui.push();
+
+			for (Picture picture : album.getPictures()) {
 	        	System.out.println(picture.toString());
 	        	URL url = picture.getOriginal().toURL();
 	        	list.add(new MyImage(url));
@@ -92,4 +103,31 @@ public class MyImage {
 		}
 		return metadataString;
 	}
+
+	public int getHeight() {
+		if (height  == -1){
+			initWidthAndheight();
+		}
+		return height;
+	}
+
+	public int getWidth() {
+		if (width == -1){
+			initWidthAndheight();
+		}
+		return width;
+	}
+		
+	private void initWidthAndheight() {
+		BufferedImage bimg;
+		try {
+			bimg = ImageIO.read(new File(getFilename()));
+			width          = bimg.getWidth();
+			height         = bimg.getHeight();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 }
