@@ -94,10 +94,10 @@ public class ImagestriptestUI extends UI {
 	<dependency>
    		<groupId>com.vaadin.addon</groupId>
    		<artifactId>vaadin-touchkit-agpl</artifactId>
-   		<version>4.0.0.beta1</version>
+   		<version>4.0.0.beta2</version>
 	</dependency>
 	
-	<dependency org="com.vaadin.addon" name="vaadin-touchkit-agpl" rev="4.0.0.beta1" />
+	<dependency org="com.vaadin.addon" name="vaadin-touchkit-agpl" rev="4.0.0.beta2" />
 	
 	
 	dropbox api

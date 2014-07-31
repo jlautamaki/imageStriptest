@@ -31,7 +31,7 @@
 		<dependency org="org.imgscalr" name="imgscalr-lib" rev="4.2"/>
 		<dependency org="org.vaadin.addons" name="cssinject" rev="2.0.3" />
 		<dependency org="commons-io" name="commons-io" rev="2.4"/>
-		<dependency org="com.vaadin.addon" name="vaadin-touchkit-agpl" rev="4.0.0.beta1" />
+		<dependency org="com.vaadin.addon" name="vaadin-touchkit-agpl" rev="4.0.0.beta2" />
 		<dependency org="com.dropbox.core" name="dropbox-core-sdk" rev="1.7.6"/>	
 
 		<!-- Servlet 3.0 API -->
