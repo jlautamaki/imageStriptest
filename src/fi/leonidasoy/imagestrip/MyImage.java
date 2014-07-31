@@ -75,7 +75,6 @@ public class MyImage {
 		try {
 			album = new DropboxAlbum(client, "/Jari's photos");
 			progressBar.setValue("Found " +album.getPictures().size() + "pictures.",0.4f);
-			ui.push();
 
 			for (Picture picture : album.getPictures()) {
 	        	System.out.println(picture.toString());

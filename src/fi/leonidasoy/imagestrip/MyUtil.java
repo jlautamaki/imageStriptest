@@ -95,7 +95,7 @@ public class MyUtil {
 	}
 	
 	public static Image getImage(URL source) {
-		String filename = FilenameUtils.getName(source.getFile());
+		String filename = "test" + FilenameUtils.getName(source.getFile());
 		System.out.println("Filename: " + filename);
 		File file = downloadFile(source, filename);
 		FileResource resource = new FileResource(file);

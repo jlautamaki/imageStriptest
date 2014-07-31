@@ -117,10 +117,9 @@ public class ImagestriptestUI extends UI {
 	
 	static{
 		try {
-			leonidasLogo = new URL("https://db.tt/bnvnVqrc");
-	    	button = new URL("https://dl.dropboxusercontent.com/u/33984813/nuoli.png");
-	    	//buttonPressed = new URL("https://dl.dropboxusercontent.com/u/33984813/nuoli---hover.png");
-	    	button_flipped = new URL("https://dl.dropboxusercontent.com/u/33984813/nuoli-flipped.png");
+			leonidasLogo = new URL("https://dl.dropboxusercontent.com/s/f0zf88kd68orrqb/leonidas-logo.png");
+	    	button = new URL("https://dl.dropboxusercontent.com/s/0ae0qefrr961l14/arrow-right.png");
+	    	button_flipped = new URL("https://dl.dropboxusercontent.com/s/9v4eixawq9tjkcp/arrow-left.png");
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			throw new RuntimeException("Failed to initialize private static final values");
