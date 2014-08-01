@@ -1,5 +1,6 @@
 package fi.leonidasoy.imagestrip;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import org.vaadin.peter.imagestrip.ImageStrip;
@@ -9,7 +10,8 @@ import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.Component;
 
-public class ImageStripWrapper {
+@SuppressWarnings("serial")
+public class ImageStripWrapper implements Serializable {
 
 	private ImageStrip strip;
 	//current offset to original
