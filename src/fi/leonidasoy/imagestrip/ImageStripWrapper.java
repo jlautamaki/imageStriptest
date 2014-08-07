@@ -2,6 +2,7 @@ package fi.leonidasoy.imagestrip;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.vaadin.peter.imagestrip.ImageStrip;
 import org.vaadin.peter.imagestrip.ImageStrip.Image;
@@ -23,11 +24,11 @@ public class ImageStripWrapper implements Serializable {
 	//number of images visible
 	final private int numberOfImages;
 	private ValueChangeListener listener = null;
-	final private MyImage[] images;
+	final private List<MyImage> images;
 	private ArrayList<ImageStrip.Image> imagesAddedToStrip = new ArrayList<ImageStrip.Image>();
 	final private String styleName;
 	
-	public ImageStripWrapper(String styleName, MyImage[] images, int imgSize, int numberOfImages, int offset, boolean cropImages, ProgressBarLayout progressBar) {
+	public ImageStripWrapper(String styleName, List<MyImage> images, int imgSize, int numberOfImages, int offset, boolean cropImages, ProgressBarLayout progressBar) {
 		this.styleName = styleName;
 		this.images=images;
 		this.offset = offset;
@@ -62,9 +63,9 @@ public class ImageStripWrapper implements Serializable {
        striptmp.setMaxAllowed(this.numberOfImages);        	
 	   
        this.imagesAddedToStrip.clear();
-       progressBar.startJob(images.length);
-        for(int i=0; i<this.images.length; i++){
-        	MyImage img = images[calculateUrlIndex(i)];
+       progressBar.startJob(images.size(),0.25f);
+        for(int i=0; i<this.images.size(); i++){
+        	MyImage img = images.get(calculateUrlIndex(i));
         	striptmp = addImage(striptmp, img,this.cropImages,this.imgSize);        	
         	progressBar.doJobIncrediment();
         }
@@ -79,7 +80,9 @@ public class ImageStripWrapper implements Serializable {
 
 	public int calculateUrlIndex(int i) {
 		//System.out.println("index = "+i+", offset = " + offset);
-		return (i+offset)%images.length;
+		int length = images.size();
+		int value =  (i+offset+length)%length;
+		return value;
 	}
 
 
@@ -100,12 +103,12 @@ public class ImageStripWrapper implements Serializable {
 
 	public int getIndex() {
 		setMiddleSelected();
-		return offset;
+		return (offset+images.size())%images.size();
 	}
 	
 	void setMiddleSelected() {
 		strip.removeValueChangeListener(listener);			
-		int value = (this.offset+getMiddleOffset())%images.length;
+		int value = (this.offset+getMiddleOffset()+images.size())%images.size();
 		strip.setValue(this.imagesAddedToStrip.get(value));
 		if (listener!=null){
 			strip.addValueChangeListener(listener);						
@@ -123,20 +126,20 @@ public class ImageStripWrapper implements Serializable {
 
 	public void scrollToLeft(){
 		strip.scrollToLeft();
-		offset=(offset+1)%images.length;
+		offset=(offset+1)%images.size();
 		setMiddleSelected();
 	}
 	
 	public void scrollToRight() {
 		strip.scrollToRight();
-		offset=(offset-1+images.length)%images.length;
+		offset=(offset-1+images.size())%images.size();
 		setMiddleSelected();
 	}
 	
 	public int offsetComparedToMiddle(int clickedindex) {
 		int value = clickedindex-offset;
 		if (value < 0){
-			value+=images.length;
+			value+=images.size();
 		}
 		//Component indexes from right, but we would like to compare to middle element 
 		int middleOffset = getMiddleOffset();

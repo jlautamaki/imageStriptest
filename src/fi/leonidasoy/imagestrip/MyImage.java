@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -14,16 +15,19 @@ import org.apache.commons.io.FilenameUtils;
 import com.dropbox.core.DbxClient;
 import com.dropbox.core.DbxException;
 import com.vaadin.server.FileResource;
-import com.vaadin.ui.UI;
 
 public class MyImage {
-	private static MyImage[] images;
+	private static List<MyImage> images;
 	private FileResource fullSizedFile=null;
 	private String metadataString=null;
 	private final URL url;
 	private int width = -1;
 	private int height = -1;
 
+	static {
+		MyImage.getImages();
+	}
+	
 	private String getFilename(){		
         return FilenameUtils.getName(url.getFile());		
 	}
@@ -42,7 +46,6 @@ public class MyImage {
 
 	//original url of this image
 	public URL getUrl() {
-		// TODO Auto-generated method stub
 		return url;
 	}
 
@@ -58,23 +61,22 @@ public class MyImage {
 	}
 
 	public FileResource getScaledFileResource(int imgSize) {
-        return MyUtil.cropAndResizeFile(this.getFileResource(),getScaledFilename(imgSize),imgSize,false);
+        return MyUtil.cropAndResizeFile(getFileResource(),getScaledFilename(imgSize),imgSize,false);
 	}
 	
-	public static MyImage[] getImages(ProgressBarLayout progressBar, UI ui) {
+	public static synchronized List<MyImage> getImages() {
 		if (images==null){
-			images = getImagesFromDropbox(progressBar, ui);	
+			images = getImagesFromDropbox();	
 		}
 		return images;
 	}
 	
-	private static MyImage[] getImagesFromDropbox(ProgressBarLayout progressBar, UI ui) {
+	private static List<MyImage> getImagesFromDropbox() {
         DbxClient client = DropboxService.getClient();
         ArrayList<MyImage> list = new ArrayList<MyImage>();
         DropboxAlbum album;
 		try {
 			album = new DropboxAlbum(client, "/Jari's photos");
-			progressBar.setValue("Found " +album.getPictures().size() + "pictures.",0.4f);
 
 			for (Picture picture : album.getPictures()) {
 	        	System.out.println(picture.toString());
@@ -88,12 +90,11 @@ public class MyImage {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
-		return list.toArray(new MyImage[] {});
+		return list;
 	}
 
-	public static MyImage getImage(int index) {
-		// TODO Auto-generated method stub
-		return images[index];
+	public synchronized static MyImage getImage(int index) {
+		return images.get(index);
 	}
 
 	public String getMetadata() {
@@ -128,5 +129,4 @@ public class MyImage {
 			e.printStackTrace();
 		}
 	}
-
 }

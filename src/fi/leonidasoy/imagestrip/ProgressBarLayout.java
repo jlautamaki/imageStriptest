@@ -6,18 +6,21 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.UI;
 
+@SuppressWarnings("serial")
 public class ProgressBarLayout extends CssLayout{
 	private ProgressBar bar = new ProgressBar(0.05f);
 	private Label label = new Label("Starting up");
 	private UI ui;
 	private String currentJobName;
-	private float currentJobSize;
 	private int progress;
-	private int taskLength;
+	private int numberOfStepsInTask;
+	private float sizeInPercentages;
+	private boolean pushIncrediments;
 
-	public ProgressBarLayout(UI ui) {
+	public ProgressBarLayout(UI ui, boolean pushIncrediments) {
 		setSizeFull();
-
+		this.pushIncrediments = pushIncrediments;
+		
 		this.ui = ui;
 		
 		bar.setStyleName("progressBar");
@@ -35,19 +38,31 @@ public class ProgressBarLayout extends CssLayout{
 	public void setValue(String string,float f) {
 		bar.setValue(f);
 		currentJobName = string;
-		currentJobSize = f;
-		label.setValue("<center>" + string + "</center>");	            	
+		label.setValue("<center>" + string + "</center>");
+		if (pushIncrediments){
+			ui.push();			
+		}
 	}
 
 	public void doJobIncrediment() {
 		progress++;
-		label.setValue("<center>" + currentJobName  + "  (" + progress + "/" + taskLength + ")</center>");	            	
+		float tmp = (float) progress/numberOfStepsInTask;
+		float value = this.sizeInPercentages*tmp;
+		System.out.println("tmp: " +tmp+ " current: " + value);
+		bar.setValue(bar.getValue()+value);
+		label.setValue("<center>" + currentJobName  + "  (" + progress + "/" + numberOfStepsInTask + ")</center>");	            	
+		if (pushIncrediments){
+			ui.push();			
+		}
 	}
 
-	public void startJob(int length) {
+	public void startJob(int numberOfSteps, float sizeInPercentages) {
 		progress=0;
-		taskLength = length;
-		label.setValue("<center>" + currentJobName  + "  (" + progress + "/" + taskLength + ")</center>");	            	
-		bar.setValue(bar.getValue()+currentJobSize/taskLength);
+		this.sizeInPercentages = sizeInPercentages;
+		numberOfStepsInTask = numberOfSteps;
+		label.setValue("<center>" + currentJobName  + "  (" + progress + "/" + numberOfStepsInTask + ")</center>");	            	
+		if (pushIncrediments){
+			ui.push();			
+		}
 	}
 }

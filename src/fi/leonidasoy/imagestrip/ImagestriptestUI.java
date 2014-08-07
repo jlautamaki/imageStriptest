@@ -2,20 +2,53 @@ package fi.leonidasoy.imagestrip;
 
 //annotations
 import javax.servlet.annotation.WebServlet;
+
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.VaadinServletConfiguration;
 import com.vaadin.addon.touchkit.server.TouchKitServlet;
 
+
+
+
+
+
+
+
+
+
+
 //addons
 import org.vaadin.cssinject.CSSInject;
 import org.vaadin.peter.imagestrip.ImageStrip;
 
+
+
+
+
+
+
+
+
+
+
 //java
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+
+
+
+
+
+
+
+
+
+
 
 //vaadin
 import com.vaadin.data.Property;
@@ -25,7 +58,9 @@ import com.vaadin.event.MouseEvents.ClickListener;
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.server.FileResource;
+import com.vaadin.server.Page;
 import com.vaadin.server.VaadinRequest;
+import com.vaadin.server.Page.BrowserWindowResizeEvent;
 import com.vaadin.shared.communication.PushMode;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Component;
@@ -39,7 +74,7 @@ import com.vaadin.ui.VerticalLayout;
 
 @PreserveOnRefresh
 @SuppressWarnings("serial")
-@Push(PushMode.AUTOMATIC) 
+@Push(PushMode.MANUAL) 
 //@Theme("mobiletheme")
 public class ImagestriptestUI extends UI {
 
@@ -115,11 +150,11 @@ public class ImagestriptestUI extends UI {
 
 	final private CssLayout mainLayout = new CssLayout();
 	
-	//layouts and urls
-	final private static int imgSize=140;
-	final private static int horizontalBorder = 20;
-	final private static int smallStripLayoutHeight=imgSize + 2*horizontalBorder;
-	final private static int imageBorderHeight = imgSize + 5;
+	//layouts and urls (related to screensize and initilized in initvariables function
+	private int imgSize;
+	private int horizontalBorder;
+	private int smallStripLayoutHeight;
+	private int imageBorderHeight;
 
 	//progressbars etc. before actual app starts
 	private Label imgMetaDataLabel;
@@ -130,78 +165,124 @@ public class ImagestriptestUI extends UI {
 	private ImageStripWrapper bigStrip;
 	
 	//some variables that are related to screenheight
-	private int bigStripHeight = 0;
-	private int bigStripLayoutHeight = 0;
+	private int bigStripHeight;
+	private int bigStripLayoutHeight;
 	private int nmbOfSmallsTripImages;
-	
-	
+    private static List<MyImage> images = new ArrayList<MyImage>();
+    private UI ui;
+	private int imageBorderWidth;
+	private String logoWidthString;
+	private String fontsizeString;
+		
 	
 	@Override
 	protected void init(VaadinRequest request) {
-		UI ui = getUI();
-		initVariables(ui);
+		ui = getUI();
 		//styles etc.
-		injectCssStyles(getUI());
 		this.setStyleName("mainWindow");		
 		this.setImmediate(true);
-		//progress indicator to show progress of imageloads
-		progressBar = new ProgressBarLayout(ui);
-		progressBar.setValue("Downloading imagelist.", 0.25f);
-		ui.setContent(progressBar);
-
-		//UI is initialized in another thread as it takes some time
-		//while initializing websockets are used for updating progressbar
+		ui = getUI();
+		
+		Page.getCurrent().addBrowserWindowResizeListener(new Page.BrowserWindowResizeListener() {
+			
+			@Override
+			public void browserWindowResized(BrowserWindowResizeEvent event) {
+				new ResizeThread().start();
+			}
+		});
+		
 		new InitializerThread().start();
 	}
 	
 	   class InitializerThread extends Thread {	        
-           private MyImage[] images;
 	        @Override
 	        public void run() {
-        		//get imagelist
 	        	access(new Runnable() {
 
 					@Override
                     public void run() {
-                		images = MyImage.getImages(progressBar, getUI());
-                    }
-                });
-	    		//download, scale and crop images
-	        	access(new Runnable() {
-                    @Override
-                    public void run() {
-                		progressBar.setValue("Downloading images.",0.5f);
-						smallStrip = new ImageStripWrapper("smallstrip", images, imgSize,nmbOfSmallsTripImages,0,true,progressBar);
-                    }
-                });
-	    		//download, scale and crop images
-	        	access(new Runnable() {
-                    @Override
-                    public void run() {
-                		progressBar.setValue("Scaling and cropping images.",0.75f);
-                		bigStrip = new ImageStripWrapper("bigstrip", images, bigStripHeight,1,(nmbOfSmallsTripImages-1)/2,false,progressBar);
-                    }
-                });
-	    		//start actual initialization of app
-	        	access(new Runnable() {
-                    @Override
-                    public void run() {
-                		progressBar.setValue("Initializing main layout.",0.95f);
-                		Layout layout = createMainLayout();
-                		progressBar.setValue("Ready.",0.99f);
-                		setContent(layout);	            	
+						initLayout(true);
                     }
                 });
 	        }
+
 	   }
-	
+
+	   class ResizeThread extends Thread {	        
+	        @Override
+	        public void run() {
+	        	access(new Runnable() {
+					private boolean updating = false;
+
+					@Override
+                   public void run() {
+						System.out.println("!!!!!!!");
+						if (!updating ){
+							updating = true;
+							initLayout(false);							
+							updating = false;
+						}
+					}
+               });
+	        }
+	   }
+
+		private void initLayout(boolean pushIncrements) {
+			initVariables(ui);
+			injectCssStyles(ui);
+			
+			progressBar = new ProgressBarLayout(ui,false);
+			progressBar.setValue("Downloading imagelist.", 0.25f);
+			if (pushIncrements){
+				ui.setContent(progressBar);
+			}
+										
+				//currently also done statically in myimage
+			images = MyImage.getImages();
+			System.out.println("first");
+			progressBar.setValue("Downloading images.",0.25f);
+			
+			smallStrip = new ImageStripWrapper("smallstrip", images, imgSize,nmbOfSmallsTripImages,0,true,progressBar);
+			
+			progressBar.setValue("Scaling and cropping images.",0.5f);
+			System.out.println("second");
+			
+			bigStrip = new ImageStripWrapper("bigstrip", images, bigStripHeight,1,(nmbOfSmallsTripImages-1)/2,false,progressBar);
+			System.out.println("end");
+			
+			progressBar.setValue("Initializing main layout.",0.95f);
+			
+			Layout layout = createMainLayout();
+			progressBar.setValue("Ready.",0.99f);
+			setContent(layout);	            	
+			ui.push();				
+		}
+
+	   
 	private void initVariables(UI ui) {
+		int windowHeight = ui.getPage().getBrowserWindowHeight();
+		int windowWidth = ui.getPage().getBrowserWindowWidth();
+		if (windowHeight<500 || windowWidth < 500){
+			imgSize=40;
+			horizontalBorder=10;
+			logoWidthString = "width:4%;";
+		}else{
+			imgSize=120;
+			horizontalBorder=20;
+			logoWidthString = "";
+		}
+		
+		fontsizeString = "font-size:x-small;";
+		smallStripLayoutHeight=imgSize + 2*horizontalBorder;
+		imageBorderHeight = imgSize + 5;
+		imageBorderWidth = imgSize +10;
+		
 		//height based variables
-		bigStripLayoutHeight = ui.getPage().getBrowserWindowHeight() -smallStripLayoutHeight-horizontalBorder *3;
-		bigStripHeight=bigStripLayoutHeight-64;
-		//we do not want the pictures to be to small :)
-		if (bigStripHeight<2*imgSize){
-			bigStripHeight=2*imgSize;
+		bigStripLayoutHeight = windowHeight -smallStripLayoutHeight-horizontalBorder *3;
+		if (windowWidth<500){
+			bigStripHeight=(int) (windowWidth*0.8f-48);						
+		}else{
+			bigStripHeight=bigStripLayoutHeight-48;			
 		}
 		//floored to nearest 25 (just to save size as the scaled and cropped images are stored to filesystem :)
 		bigStripHeight=(bigStripHeight/25)*25;
@@ -210,25 +291,23 @@ public class ImagestriptestUI extends UI {
 		int pageWidth = (int) (ui.getPage().getBrowserWindowWidth()*0.75f);
 		int numberofimages=pageWidth/(imgSize+20);
 		int numberofImagesMinusMarginals = numberofimages;
-		int oddNumberOfImages = (numberofImagesMinusMarginals/2)*2+1;
+		int oddNumberOfImages = (numberofImagesMinusMarginals/2)*2-1;
 				
 		nmbOfSmallsTripImages = oddNumberOfImages;
 	}
 
 	private void injectCssStyles(UI ui) {
 		CSSInject css = new CSSInject(ui);
-
-		int metadatalabelBottom = (bigStripLayoutHeight - bigStripHeight)/4;
 		
 		css.setStyles(""
 				//positions progressbar and label
 				+ ".progressBar {position: absolute !important; top:50% !important; left:50% !important; margin-left: -150px !important; margin-top: -20px !important;}"
-				+ ".progressLabel {position: absolute !important; top:50% !important; left:50% !important; margin-left: -150px !important;}"
+				+ ".progressLabel {color: rgb(203,203,203); position: absolute !important; top:50% !important; left:50% !important; margin-left: -150px !important;}"
 
 				//mainlayout
 				+ ".mainWindow {background-color: #000000;} "
 
-				+ ".logo {position: absolute; top:1%; left:2%;} "
+				+ ".logo {position: absolute; top:1%; left:2%; "+logoWidthString+"} "
 				+ ".componentLayout {position: absolute; background-color: rgb(203,203,203); top:0px; left:8%; width:92%;} "
 				
 				+ ".bigStripLayout {position: absolute; background-color: rgb(239,239,239); top:"+horizontalBorder+"px !important; height:"+bigStripLayoutHeight+"px !important; left:2%; width:96% !important;} "
@@ -244,10 +323,10 @@ public class ImagestriptestUI extends UI {
 				+ ".v-imagestrip .strip-horizontal-scroller {width: 0px; height 0px;}"				
 
 				+ ".bigImageStrip {position: absolute; top:50%; margin-top: -"+bigStripHeight/2+"px !important;}"
-				+ ".metaDataLabel {position: absolute; color: rgb(32,32,32); bottom: 0px !important;}"
+				+ ".metaDataLabel {position: absolute; color: rgb(32,32,32); bottom: 0px !important; "+fontsizeString+"}"
 
 				//centers imageborder and draws dashed line around it
-				+ ".imageBorder {position: absolute; border: 2px solid rgb(137,137,139); background-color: rgba(0,0,0,0); position: absolute !important; top:0px !important; left:50% !important; margin-left: -75px !important; top:50% !important; margin-top: -70px !important;}"
+				+ ".imageBorder {position: absolute; border: 2px solid rgb(137,137,139); background-color: rgba(0,0,0,0); position: absolute !important; top:0px !important; left:50% !important; margin-left: -"+imageBorderWidth/2+"px !important; top:50% !important; margin-top: -"+imgSize/2+"px !important;}"
 				
 				//fullscreenlayout
 				+ ".fullScreenLayout {vertical-align: middle; text-align: center !important;}"
@@ -350,7 +429,7 @@ public class ImagestriptestUI extends UI {
 		Panel borders = new Panel();
 		borders.addStyleName("imageBorder");
 
-		borders.setWidth(Float.toString(smallStrip.getHeight() +10) + "" + smallStrip.getHeightUnits());
+		borders.setWidth(imageBorderWidth + "" + smallStrip.getHeightUnits());
 		borders.setHeight(imageBorderHeight + "px");
 		
 		Component c = smallStrip.getComponent();
