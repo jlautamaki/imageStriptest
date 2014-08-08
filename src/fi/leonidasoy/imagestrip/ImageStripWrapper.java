@@ -63,11 +63,15 @@ public class ImageStripWrapper implements Serializable {
        striptmp.setMaxAllowed(this.numberOfImages);        	
 	   
        this.imagesAddedToStrip.clear();
-       progressBar.startJob(images.size(),0.25f);
+    	if (progressBar!=null){      
+    		progressBar.startJob(images.size(),0.25f);
+    	}
         for(int i=0; i<this.images.size(); i++){
         	MyImage img = images.get(calculateUrlIndex(i));
         	striptmp = addImage(striptmp, img,this.cropImages,this.imgSize);        	
-        	progressBar.doJobIncrediment();
+        	if (progressBar!=null){
+        		progressBar.doJobIncrediment();
+        	}
         }
 
        //striptmp.setImmediate(false);

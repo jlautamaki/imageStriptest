@@ -173,10 +173,17 @@ public class ImagestriptestUI extends UI {
 	private int imageBorderWidth;
 	private String logoWidthString;
 	private String fontsizeString;
-		
+	private Component bigStripComponent;
+	final private CssLayout bigStripLayout = new CssLayout();
+	final private CssLayout smallStripLayout = new CssLayout();
+	final private Panel borders = new Panel();
 	
 	@Override
 	protected void init(VaadinRequest request) {
+		bigStripLayout.setStyleName("bigStripLayout");
+        smallStripLayout.setStyleName("smallStripLayout");
+		borders.addStyleName("imageBorder");
+
 		ui = getUI();
 		//styles etc.
 		this.setStyleName("mainWindow");		
@@ -219,7 +226,7 @@ public class ImagestriptestUI extends UI {
 						System.out.println("!!!!!!!");
 						if (!updating ){
 							updating = true;
-							initLayout(false);							
+							refreshLayout(false);							
 							updating = false;
 						}
 					}
@@ -227,6 +234,36 @@ public class ImagestriptestUI extends UI {
 	        }
 	   }
 
+		private void refreshLayout(boolean pushIncrements) {
+			initVariables(ui);
+			injectCssStyles(ui);
+			ui.push();				
+			
+			//update bigstrip
+			ImageStripWrapper tmp = new ImageStripWrapper("bigstrip", images, bigStripHeight,1,(nmbOfSmallsTripImages-1)/2,false,null);
+			Component c = tmp.getComponent();
+			c.addStyleName("bigImageStrip");
+			bigStripLayout.removeComponent(bigStrip.getComponent());			
+			this.bigStrip=tmp;
+			this.bigStripComponent = c;
+			bigStripLayout.addComponent(c);        
+			ui.push();				
+			
+			//update smallStrip
+			tmp = new ImageStripWrapper("smallstrip", images, imgSize,nmbOfSmallsTripImages,0,true,null);			
+			c = tmp.getComponent();
+			c.addStyleName("smallImageStrip");
+			smallStripLayout.removeComponent(smallStrip.getComponent());
+			this.smallStrip=tmp;
+			smallStripLayout.addComponent(c);
+			ui.push();				
+
+			borders.setWidth(imageBorderWidth + "" + smallStrip.getHeightUnits());
+			borders.setHeight(imageBorderHeight + "px");
+			ui.push();				
+		}
+
+	   
 		private void initLayout(boolean pushIncrements) {
 			initVariables(ui);
 			injectCssStyles(ui);
@@ -354,15 +391,12 @@ public class ImagestriptestUI extends UI {
 		
 		//bigStripLayout
 		//metadatapanel to bigstriplayout
-		final CssLayout bigStripLayout = new CssLayout();
-		bigStripLayout.setStyleName("bigStripLayout");
-
 		final VerticalLayout imgLayout = new VerticalLayout();
 		imgLayout.setSizeFull();
-		Component component = bigStrip.getComponent();
-		component.addStyleName("bigImageStrip");
+		bigStripComponent = bigStrip.getComponent();
+		bigStripComponent.addStyleName("bigImageStrip");
 		
-		bigStripLayout.addComponent(component);        
+		bigStripLayout.addComponent(bigStripComponent);        
 
 		imgMetaDataLabel = new Label(this.getImgMetaDataLabelText(this.bigStrip.getIndex()));
 		imgMetaDataLabel.setStyleName("metaDataLabel");
@@ -388,8 +422,7 @@ public class ImagestriptestUI extends UI {
 				scrollToLeft();
 			}});
 
-        Layout smallStripLayout = createSmallStripLayout();
-        smallStripLayout.setStyleName("smallStripLayout");
+        createSmallStripLayout();
         smallStripLayout.addComponent(scrollLeft);
         smallStripLayout.addComponent(scrollRight);
         
@@ -421,22 +454,15 @@ public class ImagestriptestUI extends UI {
         });
 	}
 
-	private Layout createSmallStripLayout() {		
-		
-		final CssLayout smallstriplayout = new CssLayout();
-						
+	private void createSmallStripLayout() {								
 		//components that shows border around middle image and some layouting
-		Panel borders = new Panel();
-		borders.addStyleName("imageBorder");
-
 		borders.setWidth(imageBorderWidth + "" + smallStrip.getHeightUnits());
 		borders.setHeight(imageBorderHeight + "px");
 		
 		Component c = smallStrip.getComponent();
 		c.addStyleName("smallImageStrip");
-		smallstriplayout.addComponent(c);
-		smallstriplayout.addComponent(borders);		
-		return smallstriplayout;
+		smallStripLayout.addComponent(c);
+		smallStripLayout.addComponent(borders);		
 	}
 
 	//listeners for the bigStrip
