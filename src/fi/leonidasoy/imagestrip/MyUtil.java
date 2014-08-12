@@ -20,21 +20,20 @@ import com.vaadin.ui.Image;
 public class MyUtil {
 
 	/*
-	<dependency>
-		<groupId>commons-io</groupId>
-		<artifactId>commons-io</artifactId>
-		<version>2.4</version>
-	</dependency>
+	 * <dependency> <groupId>commons-io</groupId>
+	 * <artifactId>commons-io</artifactId> <version>2.4</version> </dependency>
+	 * 
+	 * <dependency org="commons-io" name="commons-io" rev="2.4"/>
+	 */
 
-	<dependency org="commons-io" name="commons-io" rev="2.4"/>*/
-
-	static public File downloadFile(URL source,String filename) {
+	static public File downloadFile(URL source, String filename) {
 		Path path = Paths.get(filename);
 		File destination = new File(filename);
 		if (Files.notExists(path)) {
 			try {
 				System.out.println("Downloading " + source);
-				org.apache.commons.io.FileUtils.copyURLToFile(source, destination);
+				org.apache.commons.io.FileUtils.copyURLToFile(source,
+						destination);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -44,61 +43,62 @@ public class MyUtil {
 	}
 
 	/*
-	 
-	imgscalr - A Java Image Scaling Library:
-	<dependency>
-		<groupId>org.imgscalr</groupId>
-		<artifactId>imgscalr-lib</artifactId>
-		<version>4.2</version>
-	</dependency>
- 
-	 <dependency org="org.imgscalr" name="imgscalr-lib" rev="4.2"/>	 
+	 * 
+	 * imgscalr - A Java Image Scaling Library: <dependency>
+	 * <groupId>org.imgscalr</groupId> <artifactId>imgscalr-lib</artifactId>
+	 * <version>4.2</version> </dependency>
+	 * 
+	 * <dependency org="org.imgscalr" name="imgscalr-lib" rev="4.2"/>
 	 */
-	static public FileResource cropAndResizeFile(FileResource fileResource, String filename,int imgSize,boolean crop) {
+	static public FileResource cropAndResizeFile(FileResource fileResource,
+			String filename, int imgSize, boolean crop) {
 		try {
 			Path path = Paths.get(filename);
 			File destination = new File(filename);
 			if (Files.notExists(path)) {
 				BufferedImage in = ImageIO.read(fileResource.getSourceFile());
-		        double scaleValue = calculateScaling(in.getHeight(),in.getWidth(),imgSize);        
-	
-		        int newWidth = (int) Math.ceil(in.getWidth()*scaleValue);
-		        int newHeight = (int) Math.ceil(in.getHeight()*scaleValue);
-		        
-		        BufferedImage imgout = Scalr.resize(in, Scalr.Method.ULTRA_QUALITY, Scalr.Mode.AUTOMATIC,
-		        		newWidth, newHeight, Scalr.OP_ANTIALIAS);        
+				double scaleValue = calculateScaling(in.getHeight(),
+						in.getWidth(), imgSize);
 
-		        RenderedImage imgout2;
-				if (crop){
-			        imgout2 = Scalr.crop(imgout, (newWidth-imgSize)/2,(newHeight-imgSize)/2, imgSize, imgSize);		        	
-			        ImageIO.write(imgout2, "jpg", destination);	        
-		        }else{
-			        ImageIO.write(imgout, "jpg", destination);	        		        	
-		        }
+				int newWidth = (int) Math.ceil(in.getWidth() * scaleValue);
+				int newHeight = (int) Math.ceil(in.getHeight() * scaleValue);
+
+				BufferedImage imgout = Scalr.resize(in,
+						Scalr.Method.ULTRA_QUALITY, Scalr.Mode.AUTOMATIC,
+						newWidth, newHeight, Scalr.OP_ANTIALIAS);
+
+				RenderedImage imgout2;
+				if (crop) {
+					imgout2 = Scalr.crop(imgout, (newWidth - imgSize) / 2,
+							(newHeight - imgSize) / 2, imgSize, imgSize);
+					ImageIO.write(imgout2, "jpg", destination);
+				} else {
+					ImageIO.write(imgout, "jpg", destination);
+				}
 
 			}
-	        return new FileResource(destination);			
+			return new FileResource(destination);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
 	}
-	
-	static public double calculateScaling(int height, int width,int imgSize) {
+
+	static public double calculateScaling(int height, int width, int imgSize) {
 		int smaller = height;
-		if (width<height){
+		if (width < height) {
 			smaller = width;
 		}
-		double value = (double) imgSize/smaller; 
+		double value = (double) imgSize / smaller;
 		return value;
 	}
-	
+
 	public static Image getImage(URL source) {
 		String filename = "test" + FilenameUtils.getName(source.getFile());
 		System.out.println("Filename: " + filename);
 		File file = downloadFile(source, filename);
 		FileResource resource = new FileResource(file);
-		return new Image("",resource);
+		return new Image("", resource);
 	}
 }

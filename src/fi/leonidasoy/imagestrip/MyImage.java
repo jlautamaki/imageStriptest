@@ -25,7 +25,7 @@ public class MyImage {
 	private int height = -1;
 
 	static {
-		MyImage.getImages();
+		//MyImage.getImages();
 	}
 	
 	private String getFilename(){		
@@ -33,11 +33,11 @@ public class MyImage {
 	}
 
 	private String getCroppedFilename(int height){
-        return "croppedimage"+height+getFilename();		
+        return "1croppedimage"+height+getFilename();		
 	}
 
 	private String getScaledFilename(int height){
-        return "scaledimage"+height+getFilename();		
+        return "1scaledimage"+height+getFilename();		
 	}
 	
 	public MyImage(URL url) {

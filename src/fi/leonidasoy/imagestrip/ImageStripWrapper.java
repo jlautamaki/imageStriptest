@@ -3,6 +3,8 @@ package fi.leonidasoy.imagestrip;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.vaadin.peter.imagestrip.ImageStrip;
 import org.vaadin.peter.imagestrip.ImageStrip.Image;
@@ -10,136 +12,148 @@ import org.vaadin.peter.imagestrip.ImageStrip.Image;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.UI;
 
 @SuppressWarnings("serial")
 public class ImageStripWrapper implements Serializable {
 
-	private ImageStrip strip;
-	//current offset to original
+	// current offset to original
 	private int offset;
-	//are images cropped?
+	// are images cropped?
 	final private boolean cropImages;
-	//max dimension of images
-	final private int imgSize;
-	//number of images visible
-	final private int numberOfImages;
+	// max dimension of images
+	private int imgSize;
+	// number of images visible
+	private int maxAllowed;
 	private ValueChangeListener listener = null;
 	final private List<MyImage> images;
-	private ArrayList<ImageStrip.Image> imagesAddedToStrip = new ArrayList<ImageStrip.Image>();
 	final private String styleName;
-	
-	public ImageStripWrapper(String styleName, List<MyImage> images, int imgSize, int numberOfImages, int offset, boolean cropImages, ProgressBarLayout progressBar) {
+
+	private ArrayList<ImageStrip.Image> imagesAddedToStrip = new ArrayList<ImageStrip.Image>();
+	private ImageStrip component = null;
+
+	public ImageStripWrapper(String styleName, List<MyImage> images,
+			int imgSize, int maxAllowed, int offset, boolean cropImages,
+			ProgressBarLayout progressBar, ValueChangeListener valueChangeListener, UI ui) {
 		this.styleName = styleName;
-		this.images=images;
+		this.images = images;
 		this.offset = offset;
 		this.cropImages = cropImages;
 		this.imgSize = imgSize;
-		this.numberOfImages = numberOfImages;
-		initStrip(progressBar);
+		this.maxAllowed = maxAllowed;
+		this.listener = valueChangeListener;
+		createStrip(progressBar, ui);
 	}
-	
-	private void initStrip(ProgressBarLayout progressBar) {
-	     // Create new horizontally aligned strip of images
-       ImageStrip striptmp = new ImageStrip();
-       striptmp.setStyleName(this.styleName);
-       
-       // Use animation
-       striptmp.setAnimated(true);
 
-       // Make strip to behave like select
-       striptmp.setSelectable(true);
-       
-       // Set size of the box surrounding the images
-       striptmp.setImageBoxWidth(imgSize+10);
-       striptmp.setImageBoxHeight(imgSize+10);
+	private void createStrip(ProgressBarLayout progressBar,UI ui) {
+		this.imagesAddedToStrip.clear();
+		component = new ImageStrip();
+		component.setStyleName(this.styleName);
+		component.setAnimated(true);
+		this.imagesAddedToStrip.clear();
+		if (progressBar != null) {
+			progressBar.startJob(images.size(), 0.25f);
+		}
+		updateStrip(ui);		
 
-       // Set maximum size of the images
-       striptmp.setImageMaxWidth(imgSize);
-       striptmp.setImageMaxHeight(imgSize);
-       
-       striptmp.setHeight(imgSize, Unit.PIXELS);
-       
-       // Limit how many images are visible at most simultaneously
-       striptmp.setMaxAllowed(this.numberOfImages);        	
-	   
-       this.imagesAddedToStrip.clear();
-    	if (progressBar!=null){      
-    		progressBar.startJob(images.size(),0.25f);
-    	}
-        for(int i=0; i<this.images.size(); i++){
-        	MyImage img = images.get(calculateUrlIndex(i));
-        	striptmp = addImage(striptmp, img,this.cropImages,this.imgSize);        	
-        	if (progressBar!=null){
-        		progressBar.doJobIncrediment();
-        	}
-        }
+		for (int i = 0; i < this.images.size(); i++) {
+			MyImage img = images.get(calculateUrlIndex(i));
+			addImage(img, this.cropImages, this.imgSize);
+			if (progressBar != null) {
+				progressBar.doJobIncrediment();
+			}
+		}
+		component.setSelectable(true);
+		component.addValueChangeListener(listener);
+	}
 
-       //striptmp.setImmediate(false);
-       striptmp.setSelectable(true);
-       if (this.listener!=null){
-   			strip.addValueChangeListener(listener);			
-       }
-       strip = striptmp;
+	private void updateStrip(UI ui) {
+		// Set size of the box surrounding the images
+		component.setImageBoxWidth(imgSize + 10);
+		component.setImageBoxHeight(imgSize + 10);
+
+		// Set maximum size of the images
+		component.setImageMaxWidth(imgSize);
+		component.setImageMaxHeight(imgSize);
+
+		component.setHeight(imgSize, Unit.PIXELS);
+
+		// Limit how many images are visible at most simultaneously
+		component.setMaxAllowed(this.maxAllowed);
+		/*int moveToLeft = this.maxAllowed/2 - this.currentMiddle;
+		if (moveToLeft>0){
+        	scrollToRight(Math.abs(moveToLeft));
+		}else if (moveToLeft<0){
+			scrollToLeft(Math.abs(moveToLeft));
+		}*/
 	}
 
 	public int calculateUrlIndex(int i) {
-		//System.out.println("index = "+i+", offset = " + offset);
 		int length = images.size();
-		int value =  (i+offset+length)%length;
+		int value = (i + offset + length) % length;
 		return value;
 	}
 
-
-	private ImageStrip addImage(ImageStrip tmpStrip, MyImage myimg, boolean cropImages, int imgSize){
+	private void addImage(MyImage myimg,
+			boolean cropImages, int imgSize) {
 		Image img;
-		if (cropImages){
-			img = tmpStrip.addImage(myimg.getCroppedFileResource(imgSize));			
-		}else{
-			img = tmpStrip.addImage(myimg.getScaledFileResource(imgSize));						
+		if (cropImages) {
+			img = this.component.addImage(myimg.getCroppedFileResource(imgSize));
+		} else {
+			img = this.component.addImage(myimg.getScaledFileResource(imgSize));
 		}
 		this.imagesAddedToStrip.add(img);
-		return tmpStrip;
 	}
 
-	public Component getComponent() {
-		return strip; 
+	public Component getComponent(ProgressBarLayout progressBar) {
+		return component;
 	}
 
 	public int getIndex() {
 		setMiddleSelected();
-		return (offset+images.size())%images.size();
+		return (offset + images.size()) % images.size();
 	}
-	
+
 	void setMiddleSelected() {
-		strip.removeValueChangeListener(listener);			
+		component.removeValueChangeListener(listener);			
 		int value = (this.offset+getMiddleOffset()+images.size())%images.size();
-		strip.setValue(this.imagesAddedToStrip.get(value));
+		component.setValue(this.imagesAddedToStrip.get(value));
 		if (listener!=null){
-			strip.addValueChangeListener(listener);						
+			component.addValueChangeListener(listener);						
 		}
 	}
-
-	public void setListener(ValueChangeListener listener) {
-		this.listener  = listener;
-		strip.addValueChangeListener(listener);			
-	}
-
+	
 	public int getMiddleOffset() {
-		return this.numberOfImages/2;
+		return this.maxAllowed / 2;
 	}
-
+		
 	public void scrollToLeft(){
-		strip.scrollToLeft();
+		component.scrollToLeft();
 		offset=(offset+1)%images.size();
 		setMiddleSelected();
 	}
 	
 	public void scrollToRight() {
-		strip.scrollToRight();
+		component.scrollToRight();
 		offset=(offset-1+images.size())%images.size();
 		setMiddleSelected();
 	}
 	
+	public Unit getHeightUnits() {
+		return getComponent(null).getHeightUnits();
+	}
+
+	public float getHeight() {
+		return getComponent(null).getHeight();
+	}
+
+	public void updateSize(int imgSize, int maxAllowed, int offset, UI ui) {
+		this.offset = offset;
+		this.imgSize = imgSize;
+		this.maxAllowed = maxAllowed;
+		this.updateStrip(ui);
+	}
+
 	public int offsetComparedToMiddle(int clickedindex) {
 		int value = clickedindex-offset;
 		if (value < 0){
@@ -149,15 +163,4 @@ public class ImageStripWrapper implements Serializable {
 		int middleOffset = getMiddleOffset();
 		value-=middleOffset;
 		return value;
-	}
-
-	public Unit getHeightUnits() {
-		return strip.getHeightUnits();
-	}
-
-	public float getHeight() {
-		return strip.getHeight();
-	}
-}
-
-
+	}}

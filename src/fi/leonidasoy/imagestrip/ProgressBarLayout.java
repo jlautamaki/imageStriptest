@@ -48,7 +48,6 @@ public class ProgressBarLayout extends CssLayout{
 		progress++;
 		float tmp = (float) progress/numberOfStepsInTask;
 		float value = this.sizeInPercentages*tmp;
-		System.out.println("tmp: " +tmp+ " current: " + value);
 		bar.setValue(bar.getValue()+value);
 		label.setValue("<center>" + currentJobName  + "  (" + progress + "/" + numberOfStepsInTask + ")</center>");	            	
 		if (pushIncrediments){

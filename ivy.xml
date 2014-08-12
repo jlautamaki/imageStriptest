@@ -24,7 +24,10 @@
 		<dependency org="com.vaadin" name="vaadin-themes" rev="&vaadin.version;" />
 
 		<!-- Push support -->
-		<dependency org="com.vaadin" name="vaadin-push" rev="&vaadin.version;" />
+		<dependency org="com.vaadin" name="vaadin-push"
+		            rev="&vaadin.version;" conf="default->default">
+		    <exclude org="org.slf4j" name="slf4j-api"/>
+		</dependency>
 
 		<dependency org="org.vaadin.addons" name="imagestrip" rev="3.0" />
 		<dependency org="com.drewnoakes" name="metadata-extractor" rev="2.6.2"/>
