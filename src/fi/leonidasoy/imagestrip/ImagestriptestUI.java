@@ -6,35 +6,10 @@ import javax.servlet.annotation.WebServlet;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.VaadinServletConfiguration;
-import com.vaadin.addon.touchkit.server.TouchKitServlet;
-
-
-
-
-
-
-
-
-
-
-
-
 
 //addons
 import org.vaadin.cssinject.CSSInject;
 import org.vaadin.peter.imagestrip.ImageStrip;
-
-
-
-
-
-
-
-
-
-
-
-
 
 //java
 import java.net.MalformedURLException;
@@ -43,18 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-
-
-
-
-
-
-
-
-
-
-
-
 
 //vaadin
 import com.vaadin.data.Property;
@@ -87,7 +50,7 @@ import com.vaadin.ui.VerticalLayout;
 public class ImagestriptestUI extends UI {
 
 	@WebServlet(value = "/*", asyncSupported = true)
-	@VaadinServletConfiguration(productionMode = false, ui = ImagestriptestUI.class, widgetset = "com.vaadin.addon.touchkit.gwt.TouchKitWidgetSet")
+	@VaadinServletConfiguration(productionMode = false, ui = ImagestriptestUI.class, widgetset = "fi.leonidasoy.imagestrip.widgetset.ImagestriptestWidgetset")
 	public static class Servlet extends VaadinServlet {
 	}
 	//@VaadinServletConfiguration(productionMode = false, ui = ImagestriptestUI.class, widgetset = "fi.leonidasoy.imagestrip.widgetset.ImagestriptestWidgetset")	
@@ -238,7 +201,8 @@ public class ImagestriptestUI extends UI {
             ui.accessSynchronously(new Runnable() {
                 @Override
                 public void run() {
-        			smallStrip = new ImageStripWrapper("smallImageStrip", images, imgSize,nmbOfSmallsTripImages,0,true,progressBar,getSmallStripListener(),ui);
+        			smallStrip = new ImageStripWrapper("smallImageStrip", images, imgSize,nmbOfSmallsTripImages,0,true,progressBar);
+        			smallStrip.setListener(getSmallStripListener());
         			progressBar.setValue("Scaling and cropping images.",0.5f);
                 	//ui.push();						
         		}});
@@ -252,7 +216,8 @@ public class ImagestriptestUI extends UI {
             ui.accessSynchronously(new Runnable() {
                 @Override
                 public void run() {
-        			bigStrip = new ImageStripWrapper("bigImageStrip", images, bigStripHeight,1,(nmbOfSmallsTripImages-1)/2,false,progressBar,getBigStripListener(),ui);
+        			bigStrip = new ImageStripWrapper("bigImageStrip", images, bigStripHeight,1,(nmbOfSmallsTripImages-1)/2,false,progressBar);
+        			bigStrip.setListener(getBigStripListener());
         			progressBar.setValue("Initializing main layout.",0.95f);
                 	//ui.push();						
         		}});
@@ -286,7 +251,6 @@ public class ImagestriptestUI extends UI {
 					//update variables and css
 					initVariables();
 					injectCssStyles();
-					//push();				
 				}
         	});
 												
@@ -294,17 +258,27 @@ public class ImagestriptestUI extends UI {
                 @Override
                 public void run() {							
 					//update bigstrip			
-					bigStrip.updateSize(bigStripHeight,1,(nmbOfSmallsTripImages-1)/2,ui);
-					//push();				
-			}});
+        			ImageStripWrapper tmp = new ImageStripWrapper("bigstrip", images, bigStripHeight,1,(nmbOfSmallsTripImages-1)/2,false,null);
+        			tmp.setListener(getBigStripListener());
+        			Component c = tmp.getComponent();
+        			c.addStyleName("bigImageStrip");
+        			bigStripLayout.removeComponent(bigStrip.getComponent());			
+        			bigStrip=tmp;
+        			bigStripLayout.addComponent(c);
+        			}});
 
 			ui.accessSynchronously(new Runnable() {
 			    @Override
 			    public void run() {
 					//update smallStrip
-					smallStrip.updateSize(imgSize,nmbOfSmallsTripImages,0,ui);			
-					//push();				
-			}});
+					ImageStripWrapper tmp = new ImageStripWrapper("smallstrip", images, imgSize,nmbOfSmallsTripImages,0,true,null);			
+        			tmp.setListener(getSmallStripListener());
+					Component c = tmp.getComponent();
+					c.addStyleName("smallImageStrip");
+					smallStripLayout.removeComponent(smallStrip.getComponent());
+					smallStrip=tmp;
+					smallStripLayout.addComponent(c);
+					}});
 
 			ui.accessSynchronously(new Runnable() {
 			    @Override
@@ -312,7 +286,6 @@ public class ImagestriptestUI extends UI {
 			    	//update borders
 			    	borders.setWidth(imageBorderWidth + "" + smallStrip.getHeightUnits());
 					borders.setHeight(imageBorderHeight + "px");
-					//push();				
 				}
 			});
         }
@@ -413,7 +386,7 @@ public class ImagestriptestUI extends UI {
 		//metadatapanel to bigstriplayout
 		final VerticalLayout imgLayout = new VerticalLayout();
 		imgLayout.setSizeFull();
-		Component c = bigStrip.getComponent(progressBar);
+		Component c = bigStrip.getComponent();
 
 		bigStripLayout.addComponent(c);        
 
@@ -455,7 +428,7 @@ public class ImagestriptestUI extends UI {
 		borders.setWidth(imageBorderWidth + "" + smallStrip.getHeightUnits());
 		borders.setHeight(imageBorderHeight + "px");
 
-		Component c = smallStrip.getComponent(progressBar);
+		Component c = smallStrip.getComponent();
 		smallStripLayout.addComponent(c);
 		smallStripLayout.addComponent(borders);		
 
