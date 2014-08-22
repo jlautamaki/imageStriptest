@@ -128,10 +128,7 @@ public class ImagestriptestUI extends UI {
 	private int horizontalBorder;
 	private int smallStripLayoutHeight;
 	private int imageBorderHeight;
-
-	//progressbars etc. before actual app starts
 	private Label imgMetaDataLabel;
-	private ProgressBarLayout progressBar;
 	
 	//both imagestrips
 	private ImageStripWrapper smallStrip; 
@@ -148,6 +145,8 @@ public class ImagestriptestUI extends UI {
 	final private CssLayout bigStripLayout = new CssLayout();
 	final private CssLayout smallStripLayout = new CssLayout();
 	final private Panel borders = new Panel();
+	private Image scrollLeft;
+	private Image scrollRight;
 
 	@Override
 	protected void init(VaadinRequest request) {
@@ -163,10 +162,7 @@ public class ImagestriptestUI extends UI {
         smallStripLayout.setStyleName("smallStripLayout");
 		borders.addStyleName("imageBorder");
 
-
-		progressBar = new ProgressBarLayout(UI.getCurrent(),false);
-		progressBar.setValue("Downloading imagelist.", 0.25f);
-		setContent(progressBar);
+		setContent(createMainLayout());
 		
 		Page.getCurrent().addBrowserWindowResizeListener(new Page.BrowserWindowResizeListener() {
 			@Override
@@ -181,61 +177,46 @@ public class ImagestriptestUI extends UI {
         @Override
         public void run() {
         	final UI ui = UI.getCurrent();
-        	//ui.push();						
-													
             ui.accessSynchronously(new Runnable() {
                 @Override
                 public void run() {
         			//currently also done statically in myimage
         			images = MyImage.getImages();
-        			progressBar.setValue("Downloading images.",0.25f);
-        			//ui.push();						
-        		}});
-													
-            ui.accessSynchronously(new Runnable() {
-                        @Override
-                        public void run() {
-        			
-                }});
-
-            ui.accessSynchronously(new Runnable() {
-                @Override
-                public void run() {
-        			smallStrip = new ImageStripWrapper("smallImageStrip", images, imgSize,nmbOfSmallsTripImages,0,true,progressBar);
-        			smallStrip.setListener(getSmallStripListener());
-        			progressBar.setValue("Scaling and cropping images.",0.5f);
-                	//ui.push();						
-        		}});
-													
-            ui.accessSynchronously(new Runnable() {
-                        @Override
-                        public void run() {
-
-                }});
-        			
-            ui.accessSynchronously(new Runnable() {
-                @Override
-                public void run() {
-        			bigStrip = new ImageStripWrapper("bigImageStrip", images, bigStripHeight,1,(nmbOfSmallsTripImages-1)/2,false,progressBar);
-        			bigStrip.setListener(getBigStripListener());
-        			progressBar.setValue("Initializing main layout.",0.95f);
-                	//ui.push();						
-        		}});
-													
-            ui.accessSynchronously(new Runnable() {
-                        @Override
-                        public void run() {
-
-                }});
-
-            ui.accessSynchronously(new Runnable() {
-                @Override
-                public void run() {
-        			Layout layout = createMainLayout();
-        			progressBar.setValue("Ready.",0.99f);
-        			setContent(layout);	            	
                 }
             });
+
+            
+            ui.access(new Runnable() {
+                @Override
+                public void run() {
+        			smallStrip = new ImageStripWrapper("smallImageStrip", images, imgSize,nmbOfSmallsTripImages,0,true);
+        			smallStrip.setListener(getSmallStripListener());
+        			
+        			Component c = smallStrip.getComponent();
+        			smallStripLayout.addComponent(c);
+
+        			//border for middle-image
+        			borders.setWidth(imageBorderWidth + "" + smallStrip.getHeightUnits());
+        			borders.setHeight(imageBorderHeight + "px");
+
+        			smallStripLayout.addComponent(borders);		
+        			initScrollButtonListeners();
+        		}});
+        			
+            ui.access(new Runnable() {
+                @Override
+                public void run() {
+        			bigStrip = new ImageStripWrapper("bigImageStrip", images, bigStripHeight,1,(nmbOfSmallsTripImages-1)/2,false);
+        			bigStrip.setListener(getBigStripListener());
+
+        			Component c = bigStrip.getComponent();
+        			bigStripLayout.addComponent(c);        
+
+        			imgMetaDataLabel = new Label(getImgMetaDataLabelText(bigStrip.getIndex()));
+        			imgMetaDataLabel.setStyleName("metaDataLabel");
+        			imgMetaDataLabel.setContentMode(ContentMode.HTML);
+        			bigStripLayout.addComponent(imgMetaDataLabel);		        	        
+        		}});													
         }
     }	
 	
@@ -251,41 +232,37 @@ public class ImagestriptestUI extends UI {
 					//update variables and css
 					initVariables();
 					injectCssStyles();
+					push();
 				}
         	});
 												
-        	ui.accessSynchronously(new Runnable() {
+        	ui.access(new Runnable() {
                 @Override
                 public void run() {							
 					//update bigstrip			
-        			ImageStripWrapper tmp = new ImageStripWrapper("bigstrip", images, bigStripHeight,1,(nmbOfSmallsTripImages-1)/2,false,null);
-        			tmp.setListener(getBigStripListener());
-        			Component c = tmp.getComponent();
-        			c.addStyleName("bigImageStrip");
         			bigStripLayout.removeComponent(bigStrip.getComponent());			
-        			bigStrip=tmp;
-        			bigStripLayout.addComponent(c);
+        			bigStrip.resize(bigStripHeight,1,(nmbOfSmallsTripImages-1)/2);
+        			bigStripLayout.addComponent(bigStrip.getComponent());
+					push();
         			}});
 
-			ui.accessSynchronously(new Runnable() {
+			ui.access(new Runnable() {
 			    @Override
 			    public void run() {
 					//update smallStrip
-					ImageStripWrapper tmp = new ImageStripWrapper("smallstrip", images, imgSize,nmbOfSmallsTripImages,0,true,null);			
-        			tmp.setListener(getSmallStripListener());
-					Component c = tmp.getComponent();
-					c.addStyleName("smallImageStrip");
 					smallStripLayout.removeComponent(smallStrip.getComponent());
-					smallStrip=tmp;
-					smallStripLayout.addComponent(c);
+					smallStrip.resize(imgSize,nmbOfSmallsTripImages,0);			
+					smallStripLayout.addComponent(smallStrip.getComponent());
+					push();
 					}});
 
-			ui.accessSynchronously(new Runnable() {
+			ui.access(new Runnable() {
 			    @Override
 			    public void run() {
 			    	//update borders
 			    	borders.setWidth(imageBorderWidth + "" + smallStrip.getHeightUnits());
 					borders.setHeight(imageBorderHeight + "px");
+					push();
 				}
 			});
         }
@@ -386,21 +363,11 @@ public class ImagestriptestUI extends UI {
 		//metadatapanel to bigstriplayout
 		final VerticalLayout imgLayout = new VerticalLayout();
 		imgLayout.setSizeFull();
-		Component c = bigStrip.getComponent();
-
-		bigStripLayout.addComponent(c);        
-
-		imgMetaDataLabel = new Label(this.getImgMetaDataLabelText(this.bigStrip.getIndex()));
-		imgMetaDataLabel.setStyleName("metaDataLabel");
-		imgMetaDataLabel.setContentMode(ContentMode.HTML);
-
-		bigStripLayout.addComponent(imgMetaDataLabel);		
-		componentLayout.addComponent(bigStripLayout);
-        
-        //smallStripLayout        
-		initSmallStripLayout();
-        componentLayout.addComponent(this.smallStripLayout);
 		
+        componentLayout.addComponent(smallStripLayout);
+		componentLayout.addComponent(bigStripLayout);
+		initScrollButtons();
+
     	return mainLayout;
     }
 
@@ -423,36 +390,33 @@ public class ImagestriptestUI extends UI {
         });
 	}
 
-	private void initSmallStripLayout() {										
-		//border for middle-image
-		borders.setWidth(imageBorderWidth + "" + smallStrip.getHeightUnits());
-		borders.setHeight(imageBorderHeight + "px");
-
-		Component c = smallStrip.getComponent();
-		smallStripLayout.addComponent(c);
-		smallStripLayout.addComponent(borders);		
-
-		Image scrollRight = MyUtil.getImage(button_flipped);
+	private void initScrollButtons(){
+		scrollRight = MyUtil.getImage(button_flipped);
+		scrollLeft = MyUtil.getImage(button);
+		
 		scrollRight.setStyleName("scrollRight");
-        scrollRight.addClickListener(new ClickListener() {
+		scrollLeft.setStyleName("scrollLeft");
+	}
+
+	private void initScrollButtonListeners(){
+	    scrollRight.addClickListener(new ClickListener() {
 			@Override
 			public void click(ClickEvent event) {
 				scrollToRight();
-			}});
-				
-		Image scrollLeft = MyUtil.getImage(button);
-		scrollLeft.setStyleName("scrollLeft");
-        scrollLeft.addClickListener(new ClickListener() {
+			}
+	    });
+	
+	    
+	    scrollLeft.addClickListener(new ClickListener() {
 			@Override
 			public void click(ClickEvent event) {
 				scrollToLeft();
-			}});
-
-		
-		smallStripLayout.addComponent(scrollLeft);
-        smallStripLayout.addComponent(scrollRight);
+			}
+		});
+	    smallStripLayout.addComponent(scrollLeft);
+	    smallStripLayout.addComponent(scrollRight);
 	}
-
+	
 	//listeners for the bigStrip
 	private ValueChangeListener getBigStripListener() {
 		return new Property.ValueChangeListener() {

@@ -17,16 +17,12 @@ import com.dropbox.core.DbxException;
 import com.vaadin.server.FileResource;
 
 public class MyImage {
-	private static List<MyImage> images;
+	private static List<MyImage> images = MyImage.getImages();
 	private FileResource fullSizedFile=null;
 	private String metadataString=null;
 	private final URL url;
 	private int width = -1;
 	private int height = -1;
-
-	static {
-		//MyImage.getImages();
-	}
 	
 	private String getFilename(){		
         return FilenameUtils.getName(url.getFile());		
