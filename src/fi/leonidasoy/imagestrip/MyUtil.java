@@ -5,20 +5,36 @@ import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FilenameUtils;
 import org.imgscalr.Scalr;
 
+import java.nio.file.Paths;
+
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 import com.vaadin.server.FileResource;
 import com.vaadin.ui.Image;
 
 public class MyUtil {
+	private static FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
 
+	static public Path getPath(String filename){
+		//true is not working perfectly :(
+		boolean inmemory = false;
+		if (inmemory ){
+			return fs.getPath(filename);
+		}else{
+			return Paths.get(filename);
+		}
+	}
+	
+	
 	/*
 	 * <dependency> <groupId>commons-io</groupId>
 	 * <artifactId>commons-io</artifactId> <version>2.4</version> </dependency>
@@ -27,8 +43,9 @@ public class MyUtil {
 	 */
 
 	static public File downloadFile(URL source, String filename) {
-		Path path = Paths.get(filename);
+		Path path = getPath(filename);
 		File destination = new File(filename);
+		System.out.println("Filename: " + filename + " @: " + path.toAbsolutePath());
 		if (Files.notExists(path)) {
 			try {
 				System.out.println("Downloading " + source);
@@ -53,7 +70,7 @@ public class MyUtil {
 	static public FileResource cropAndResizeFile(FileResource fileResource,
 			String filename, int imgSize, boolean crop) {
 		try {
-			Path path = Paths.get(filename);
+			Path path = getPath(filename);
 			File destination = new File(filename);
 			if (Files.notExists(path)) {
 				BufferedImage in = ImageIO.read(fileResource.getSourceFile());
@@ -95,8 +112,7 @@ public class MyUtil {
 	}
 
 	public static Image getImage(URL source) {
-		String filename = "test" + FilenameUtils.getName(source.getFile());
-		System.out.println("Filename: " + filename);
+		String filename = FilenameUtils.getName(source.getFile());
 		File file = downloadFile(source, filename);
 		FileResource resource = new FileResource(file);
 		return new Image("", resource);

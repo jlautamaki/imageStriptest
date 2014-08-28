@@ -1,5 +1,6 @@
 package fi.leonidasoy.imagestrip;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +15,6 @@ import com.vaadin.ui.Component;
 @SuppressWarnings("serial")
 public class ImageStripWrapper implements Serializable {
 
-	private ImageStrip strip;
 	// current offset to original
 	private int offset;
 	// are images cropped?
@@ -25,10 +25,20 @@ public class ImageStripWrapper implements Serializable {
 	private int numberOfVisibleImages;
 	private ValueChangeListener listener = null;
 	final private List<MyImage> images;
-	private ArrayList<ImageStrip.Image> imagesAddedToStrip = new ArrayList<ImageStrip.Image>();
 	final private String styleName;
 	private int originalImgSize;
 
+	private transient ImageStrip strip;
+	private transient ArrayList<ImageStrip.Image> imagesAddedToStrip = new ArrayList<ImageStrip.Image>();
+	
+	private void readObject(java.io.ObjectInputStream in)
+			throws IOException, ClassNotFoundException {
+		// note, here we don't need in.defaultReadObject();
+		// because MyClass has no other state to deserialize
+		in.defaultReadObject();
+		initStrip();
+	}
+	
 	public ImageStripWrapper(String styleName, List<MyImage> images,
 			int imgSize, int numberOfVisibleImages, int offset, boolean cropImages) {
 		this.styleName = styleName;

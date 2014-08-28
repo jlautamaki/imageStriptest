@@ -58,6 +58,15 @@ public class ImagestriptestUI extends UI {
 	//}
 	
 	/*
+	<dependency>
+      <groupId>com.google.jimfs</groupId>
+	  <artifactId>jimfs</artifactId>
+	  <version>1.0</version>
+	</dependency>
+	 
+	<dependency org="com.google.jimfs" name="jimfs" rev="1.0" />
+	
+	 
 	javax.servlet
 	<dependency>
 		<groupId>javax.servlet</groupId>
@@ -486,9 +495,8 @@ public class ImagestriptestUI extends UI {
 	//opens image to fullscreen
 	protected void changeToFullScreenImage(int index) {		
 		MyImage selectedImage = MyImage.getImage(index);
-		URL url = selectedImage.getUrl();
 		FileResource res = selectedImage.getFileResource();
-		Image image = new Image(url.getFile(),res);
+		Image image = new Image(res.getFilename(),res);
 		image.addClickListener(new ClickListener() {
 			@Override
 			public void click(ClickEvent event) {

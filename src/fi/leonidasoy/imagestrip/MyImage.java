@@ -18,39 +18,43 @@ import com.vaadin.server.FileResource;
 
 public class MyImage {
 	private static List<MyImage> images = MyImage.getImages();
-	private FileResource fullSizedFile=null;
 	private String metadataString=null;
-	private final URL url;
 	private int width = -1;
 	private int height = -1;
+	private final FileResource fullSizedFileResource;
+	private final File file;
 	
-	private String getFilename(){		
-        return FilenameUtils.getName(url.getFile());		
+	private static String getFilename(URL url){		
+        
+		return FilenameUtils.getName(url.getFile());		
 	}
 
 	private String getCroppedFilename(int height){
-        return "1croppedimage"+height+getFilename();		
+        return "croppedimage"+height+file.getName();		
 	}
 
 	private String getScaledFilename(int height){
-        return "1scaledimage"+height+getFilename();		
+        return "scaledimage"+height+file.getName();		
 	}
 	
 	public MyImage(URL url) {
-		this.url = url;
+		this(getFile(url));
 	}
-
-	//original url of this image
-	public URL getUrl() {
-		return url;
+	
+	public MyImage(File imageFile) {
+		this.file   = imageFile;
+		this.fullSizedFileResource = new FileResource(file);
+		this.initWidthAndheight();
+	}
+	
+	private static File getFile(URL url) {
+	    return MyUtil.downloadFile(url,getFilename(url));
 	}
 
 	public FileResource getFileResource() {
-		if (fullSizedFile==null){
-			fullSizedFile = new FileResource(MyUtil.downloadFile(getUrl(),this.getFilename()));		
-		}
-	    return fullSizedFile;
+	    return fullSizedFileResource;
 	}
+
 	
 	public FileResource getCroppedFileResource(int imgSize) {
         return MyUtil.cropAndResizeFile(getFileResource(),getCroppedFilename(imgSize),imgSize,true);
@@ -62,7 +66,11 @@ public class MyImage {
 	
 	public static synchronized List<MyImage> getImages() {
 		if (images==null){
-			images = getImagesFromDropbox();	
+        	if (DuplicateRemover.useThisClass){
+        		images = DuplicateRemover.getFilteredFiles(0);
+        	}else{
+    			images = getImagesFromDropbox();	
+            }
 		}
 		return images;
 	}
@@ -101,23 +109,17 @@ public class MyImage {
 	}
 
 	public int getHeight() {
-		if (height  == -1){
-			initWidthAndheight();
-		}
 		return height;
 	}
 
 	public int getWidth() {
-		if (width == -1){
-			initWidthAndheight();
-		}
 		return width;
 	}
 		
 	private void initWidthAndheight() {
 		BufferedImage bimg;
 		try {
-			bimg = ImageIO.read(new File(getFilename()));
+			bimg = ImageIO.read(file);
 			width          = bimg.getWidth();
 			height         = bimg.getHeight();
 		} catch (IOException e) {
