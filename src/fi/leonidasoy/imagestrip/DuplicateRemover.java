@@ -4,6 +4,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.vaadin.event.MouseEvents.ClickListener;
+import com.vaadin.ui.Layout;
+
 public class DuplicateRemover {
 	//change this to true if you want to test
 	static public final boolean useThisClass = false;
@@ -24,5 +27,11 @@ public class DuplicateRemover {
 		images.add(newImage);
 		
 		return images;
+	}
+
+	//return Layout and somehow utilize ClickListener for returning back to imageViewer
+	public static Layout getLayout(ClickListener listener) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

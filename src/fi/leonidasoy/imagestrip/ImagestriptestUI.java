@@ -170,9 +170,24 @@ public class ImagestriptestUI extends UI {
 		bigStripLayout.setStyleName("bigStripLayout");
         smallStripLayout.setStyleName("smallStripLayout");
 		borders.addStyleName("imageBorder");
-
-		setContent(createMainLayout());
 		
+		if (DuplicateRemover.useThisClass){
+			ClickListener listener = new ClickListener() {
+				@Override
+				public void click(ClickEvent event) {
+					setImageViewerLayout();
+				}
+		    };
+			Layout duplicateRemoverLayout = DuplicateRemover.getLayout(listener);		
+			setContent(duplicateRemoverLayout);
+		}else{
+			setImageViewerLayout();
+		}		
+	}
+	
+	protected void setImageViewerLayout() {
+		Layout imageStripMainLayout = createMainLayout();
+		setContent(imageStripMainLayout);
 		Page.getCurrent().addBrowserWindowResizeListener(new Page.BrowserWindowResizeListener() {
 			@Override
 			public void browserWindowResized(BrowserWindowResizeEvent event) {
@@ -181,7 +196,7 @@ public class ImagestriptestUI extends UI {
 		});
 		new InitThread().start();
 	}
-	
+
 	class InitThread extends Thread {
         @Override
         public void run() {
